@@ -1,0 +1,15 @@
+VOY: ~VOY~
+SAT: satellite monitored: GPS
+DMT: date/month/local time of observation: ~TIME LOCAL~
+POS: position of observation in latitude and longitude: ~LAT~ / ~LON~
+WND: beaufort windforce and true direction at time of observation: ~WINDFORCEB~ / ~WINDDIR~
+SEA: observed sea height and direction at time of observation ~SEAHEIGHT~ / ~SEADIR~
+SPD: observed speed at time of observation: ~GPSAVGSPD~
+ENG: Engine load in percent: ~MELOAD~
+RPM: Rotation per minute: ~RPM~
+CON: main engine consumption in mts: HFO / MDO: ~MEHFOCONS~ / ~MEMDOCONS~
+AUX: engine consumption in mts: HFO / MDO: ~AUXHFOCONS~ / ~AUXMDOCONS~
+ROB: bunkers remaining onboard: HSFO/LSMGO/LO: ~HFOROB~ MT / ~MDOROB~ MT / ~LOTOTALROB~ L
+DIS: remaining distance to next port of call: ~REMAININGDIST~
+ETA: eta pilot station: ~ETATIMELOCAL~ / ~ETATIMEUTC~
+MST: name of master: ~MASTER~
