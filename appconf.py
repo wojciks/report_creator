@@ -3,7 +3,7 @@
 EXCEL_PATH = './excel/Daily report.xlsx'
 EXCEL_SHEET = 'Sheet1'
 DATA_GOING_DOWN = True  # State True if data is displayed in columns
-FIRST_DATA = 565  # State no of first row/column of data (row if if data displayed in columns)
+FIRST_DATA = 4  # State no of first row/column of data (row if if data displayed in columns)
 EVENT_LOCATION_DICT = {
     'HFOROB': 6,
     'MDOROB': 7,

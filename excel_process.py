@@ -2,10 +2,8 @@ import xlrd
 from appconf import DATA_GOING_DOWN, FIRST_DATA, EXCEL_PATH, EXCEL_SHEET, EVENT_LOCATION_DICT
 
 
-def excel_data_source(data_going_down, where_first_data):
-    if data_going_down:
-        pass
-    file = EXCEL_PATH
+def excel_data_source(where_first_data):
+    file = EXCEL_PATH  # need to fix the global var here...
     workbook = xlrd.open_workbook(file)
     worksheet = workbook.sheet_by_name(EXCEL_SHEET)
     excel_data = {
@@ -52,5 +50,8 @@ def excel_data_source(data_going_down, where_first_data):
 
 
 def single_cell_data_read(data_loc, worksheet):
-    return worksheet.cell(data_loc[0], data_loc[1]).value
+    if DATA_GOING_DOWN:  # need to fix the global var here...
+        return worksheet.cell(data_loc[0], data_loc[1]).value
+    else:
+        return worksheet.cell(data_loc[1], data_loc[0]).value
 

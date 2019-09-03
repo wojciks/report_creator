@@ -40,7 +40,7 @@ def template_text_file_read(file_path):
     return filedata
 
 
-DICTIONARY = merge_two_dicts(DICTIONARY, excel_data_source(DATA_GOING_DOWN, FIRST_DATA))
+DICTIONARY = merge_two_dicts(DICTIONARY, excel_data_source(FIRST_DATA))
 
 txt_file_creation(to_whom, event,
                   template_text_file_read('./reps_example/CHARTERER_EXAMPLE.txt'))

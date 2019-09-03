@@ -87,3 +87,4 @@ fabric.properties
 
 ve-final/
 __pycache__/
+.idea/
