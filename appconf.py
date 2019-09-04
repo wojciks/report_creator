@@ -16,12 +16,12 @@ EVENT_LOCATION_DICT = {
     'LOAUXROB': 12,
     'LOTOTALROB': 13,
     'FWROB': 14,
-    #'FWPROD':  Will be taken from direct input
-    #'FWCONS':  Will be taken from direct input
+    # 'FWPROD':  Will be taken from direct input
+    # 'FWCONS':  Will be taken from direct input
     'MEHFOCONS': 15,
     'MEMDOCONS': 16,
     'AUXHFOCONS': 17,
-    'AUXMDOCONS':  18,
+    'AUXMDOCONS': 18,
     'BOILERHFOCONS': 19,
     'BOILERMDOCONS': 20,
     'TOTALHFOCONS': 21,
@@ -29,7 +29,7 @@ EVENT_LOCATION_DICT = {
     'LOCYLCONS': 23,
     'LOMECONS': 24,
     'LOAUXCONS': 25,
-    #'TOTALLOCONS': , will be validated with calculation
+    # 'TOTALLOCONS': , will be validated with calculation
     'RPM': 26,
     'MEDIST': 27,
     'MESPD': 29,
@@ -47,5 +47,9 @@ EVENT_LOCATION_DICT = {
     'INCINERATORSERVICETK': 52,
     'BILGEWATERTK': 53,
     'SLUDGETOTAL': 54
-    
+
 }
+
+USER_DATA_ENTRY_FIELDS = ['VOY', 'EVENT', 'LOCATION', 'TIMELOCAL', 'TZ', 'LAT', 'LON', 'GPSDIST', 'REMAININGDIST',
+                          'LOGFROMLAST', 'POBTIMELOCAL', 'POFFTIMELOCAL', 'NEXT', 'ETATIMELOCAL', 'ETATZ', 'WINDDIR',
+                          'WINDFORCEKTS', 'SEAHEIGHT', 'SEADIR', 'SWELL', 'BILGES', 'REMARKS']
