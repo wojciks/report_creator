@@ -1,6 +1,6 @@
 VOY: ~VOY~
 SAT: satellite monitored: GPS
-DMT: date/month/local time of observation: ~TIME LOCAL~
+DMT: date/month/local time of observation: ~TIMELOCAL~
 POS: position of observation in latitude and longitude: ~LAT~ / ~LON~
 WND: beaufort windforce and true direction at time of observation: ~WINDFORCEB~ / ~WINDDIR~
 SEA: observed sea height and direction at time of observation ~SEAHEIGHT~ / ~SEADIR~
