@@ -18,7 +18,12 @@ report_creator access excel file and reads data and saves it to text files, acco
 + data validation - just in case somoeone will put this additional zero in the wrong place!
 + GUI, to make data entry intuitive and convenient
 + database integration, so to keep all data in nice and convenient format
++ executable format, so on ships without possibility of installing python interpreter, software still can be used.
 
 ###Going further:
 + filling up inconvenient HTML forms sometimes companies use to generate reports in format that is convenient for them, or mimicking functionality of these forms.
 + specialised reports in different formats to answer growing needs of companies (PDF, CSV, XLS, and others)
+
+###Known issues:
++ **THE CODE** It is still a very early development stage and needs plenty of refactoring. Usage of global variables is too common.
++ Unable to change the row/column in excel for next event/date in other way than changing `FIRST_DATA` global variable in `appconf.py`
