@@ -1,6 +1,5 @@
 import sqlite3
 import os
-from appconf import USER_DATA_ENTRY_FIELDS
 
 
 def check_and_update_database(data_dictionary):
@@ -69,13 +68,16 @@ def check_and_update_database(data_dictionary):
     value_string = str(list(data_dictionary.values())).replace('[','').replace(']','')
     c.execute(f'INSERT INTO VOYAGE_EVENT ({key_string}) VALUES ({value_string});')
     conn.commit()
-    conn.close()
+    return conn
 
-# def avg_spd_calc():
-#     conn = sqlite3.connect('data_history.db')
-#     c = conn.cursor()
-#     c.execute(f'SELECT GPSDIST FROM VOYAGE_EVENT where ID = (SELECT MAX(ID) FROM VOYAGE_EVENT)')
-#     dist = c.fetchone()[0]
-#     c.execute(f'SELECT TIMEFROMLAST FROM VOYAGE_EVENT where ID = (SELECT MAX(ID) FROM VOYAGE_EVENT)')
-#     time = c.fetchone()[0]
-#     return dist / time
+
+def voyage_distance_time_avg_speed(conn, voyage_no):
+    c = conn.cursor()
+    c.execute(f'SELECT SUM(GPSDIST) FROM VOYAGE_EVENT WHERE VOY = {voyage_no} and (EVENT = "NOONS" or EVENT = "EOSP")')
+    voy_dist = float(c.fetchone()[0])
+    c.execute(f'SELECT SUM(TIMEFROMLAST) FROM VOYAGE_EVENT WHERE VOY = {voyage_no} and (EVENT = "NOONS" or EVENT = "EOSP")')
+    voy_time = float(c.fetchone()[0])
+    voy_speed = voy_dist / voy_time
+    return {'~VOYDIST~': voy_dist,
+            '~VOYTIME~': voy_time,
+            '~VOYGPSAVGSPD~': voy_speed}

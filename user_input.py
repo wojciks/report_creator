@@ -3,7 +3,7 @@ def nav_data():
 
     user_dict = {  # {f'~{key}~': input(f'Insert data for {key}: ') for key in USER_DATA_ENTRY_FIELDS}
     '~VOY~': '325',
-    '~EVENT~': 'NOON',
+    '~EVENT~': 'NOONS',
     '~LOCATION~': 'AT SEA',
     '~TIMELOCAL~': '2019-09-06 10:24',
     '~TZ~': '2',
