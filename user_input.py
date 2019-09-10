@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 
 def nav_data():
 
@@ -5,7 +7,7 @@ def nav_data():
     '~VOY~': '325',
     '~EVENT~': 'NOONS',
     '~LOCATION~': 'AT SEA',
-    '~TIMELOCAL~': '2019-09-06 10:24',
+    '~TIMELOCAL~': datetime(2019, 9, 6, 10, 24),
     '~TZ~': '2',
     '~LAT~': '50-04.9N',
     '~LON~': '019-55.2E',
@@ -28,6 +30,10 @@ def nav_data():
     '~MASTER~': 'Jan Kowalski'}
 
     user_dict['~GPSAVGSPD~'] = float(user_dict['~GPSDIST~']) / float(user_dict['~TIMEFROMLAST~'])
+
+    user_dict['~TIMEUTC~'] = user_dict['~TIMELOCAL~'] - timedelta(hours=int(user_dict['~TZ~']))
+    user_dict['~TIMEUTC~'] = user_dict['~TIMEUTC~'].strftime("%Y-%m-%d %H:%M")
+    user_dict['~TIMELOCAL~'] = user_dict['~TIMELOCAL~'].strftime("%Y-%m-%d %H:%M")
 
     if int(user_dict['~WINDFORCEKTS~']) < 1:
         user_dict['~WINDFORCEB~'] = 0
