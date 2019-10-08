@@ -3,7 +3,7 @@
 EXCEL_PATH = './excel/Daily report.xlsx'
 EXCEL_SHEET = 'Sheet1'
 DATA_GOING_DOWN = True  # State True if data is displayed in columns
-FIRST_DATA = 61  # State no of first row/column of data (row if if data displayed in columns)
+FIRST_DATA = 2  # State no of first row/column of data (row if if data displayed in columns)
 
 TEMPLATE_DIRECTORY = './reps_example/'
 REPORT_OUTPUT_DIRECTORY = './reps_output'

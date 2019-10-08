@@ -1,5 +1,5 @@
 import xlrd
-from appconf import DATA_GOING_DOWN, FIRST_DATA, EXCEL_PATH, EXCEL_SHEET, EVENT_LOCATION_DICT
+from appconf import DATA_GOING_DOWN, EXCEL_PATH, EXCEL_SHEET, EVENT_LOCATION_DICT
 
 
 def excel_data_source(where_first_data):

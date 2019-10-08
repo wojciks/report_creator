@@ -8,9 +8,9 @@ import history_process
 
 
 def txt_file_creation(to_whom, message):
-    timestamp = datetime.datetime.now()  # only temporary, need to take date od the actual event.
-    naming = to_whom + " " + " report "
-    filename = timestamp.strftime("%Y-%m-%d.txt" + naming)
+    timestamp = datetime.datetime.now()  # only temporary, need to take date of the actual event.
+    naming = to_whom + " " + " report.txt"
+    filename = timestamp.strftime("%Y-%m-%d " + naming)
     filename_with_path = os.path.join(REPORT_OUTPUT_DIRECTORY, filename)
     with open(filename_with_path, "w") as myfileresult:
         myfileresult.write(message)
@@ -28,6 +28,7 @@ def merge_two_dicts(dict1, dict2):
     z = dict1.copy()
     z.update(dict2)
     return z
+
 
 d = nav_data()
 
