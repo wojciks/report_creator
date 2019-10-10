@@ -2,16 +2,16 @@ import os
 import os.path
 import datetime
 from excel_process import excel_data_source
-from appconf import FIRST_DATA, TEMPLATE_DIRECTORY, REPORT_OUTPUT_DIRECTORY
 from user_input import nav_data
 import history_process
+from excel_process import data
 
 
 def txt_file_creation(to_whom, message):
     timestamp = datetime.datetime.now()  # only temporary, need to take date of the actual event.
     naming = to_whom + " " + " report.txt"
     filename = timestamp.strftime("%Y-%m-%d " + naming)
-    filename_with_path = os.path.join(REPORT_OUTPUT_DIRECTORY, filename)
+    filename_with_path = os.path.join(data['REPORT_OUTPUT_DIRECTORY'], filename)
     with open(filename_with_path, "w") as myfileresult:
         myfileresult.write(message)
 
@@ -32,11 +32,11 @@ def merge_two_dicts(dict1, dict2):
 
 d = nav_data()
 
-DICTIONARY = merge_two_dicts(excel_data_source(FIRST_DATA), d)
+DICTIONARY = merge_two_dicts(excel_data_source(data['FIRST_DATA']), d)
 
 conn = history_process.check_and_update_database(d)  #in the end DICTIONARY will go here as parameter
 print(history_process.voyage_distance_time_avg_speed(conn, DICTIONARY['~VOY~']))
 
-for filename in os.listdir(TEMPLATE_DIRECTORY):
-    txt_file_creation(f'{filename}'[:-4], template_text_file_read(f'{TEMPLATE_DIRECTORY}{filename}'))
+for filename in os.listdir(data['TEMPLATE_DIRECTORY']):
+    txt_file_creation(f'{filename}'[:-4], template_text_file_read(f'{data["TEMPLATE_DIRECTORY"]}{filename}'))
 
