@@ -5,6 +5,7 @@ from excel_process import excel_data_source
 from user_input import nav_data
 import history_process
 from excel_process import data
+import json
 
 
 def txt_file_creation(to_whom, message):
@@ -40,3 +41,8 @@ print(history_process.voyage_distance_time_avg_speed(conn, DICTIONARY['~VOY~']))
 for filename in os.listdir(data['TEMPLATE_DIRECTORY']):
     txt_file_creation(f'{filename}'[:-4], template_text_file_read(f'{data["TEMPLATE_DIRECTORY"]}{filename}'))
 
+reports_ok = input("Move on to the next line in excel? y/n: ")
+if reports_ok == 'y':
+    data['FIRST_DATA'] += 1
+    with open('appconf.json', 'w') as outfile:
+        json.dump(data, outfile)
