@@ -43,6 +43,7 @@ def check_and_update_database(data_dictionary):
             SEAHEIGHT       INTEGER,
             SEADIR          VARCHAR(3),
             SWELL           REAL,
+            AIRTEMP         INTEGER,
             BILGES          VARCHAR(50),
             REMARKS         VARCHAR(150),
             MASTER          VARCHAR(50),
