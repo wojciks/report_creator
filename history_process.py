@@ -44,6 +44,7 @@ def check_and_update_database(data_dictionary):
             SEADIR          VARCHAR(3),
             SWELL           REAL,
             AIRTEMP         INTEGER,
+            PRESSURE        INTEGER,
             BILGES          VARCHAR(50),
             REMARKS         VARCHAR(150),
             MASTER          VARCHAR(50),
