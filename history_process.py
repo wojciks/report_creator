@@ -49,7 +49,7 @@ def check_and_update_database(data_dictionary):
             REMARKS         VARCHAR(150),
             MASTER          VARCHAR(50),
             
-            IFLOADING           INTEGER,  
+            IFCARGO             INTEGER,  
             COMMENCECARGOLOCAL  INTEGER,
             COMMENCECARGOUTC    INTEGER,
             COMPLETEDCARGOLOCAL INTEGER,
