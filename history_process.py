@@ -83,3 +83,10 @@ def voyage_distance_time_avg_speed(conn, voyage_no):
     return {'~VOYDIST~': voy_dist,
             '~VOYTIME~': voy_time,
             '~VOYGPSAVGSPD~': voy_speed}
+
+
+def last_event_data():
+    conn = sqlite3.connect('data_history.db')
+    c = conn.cursor()
+    c.execute('SELECT VOY, EVENT, TZ, TIMEUTC, REMAININGDIST FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
+    return c.fetchone()

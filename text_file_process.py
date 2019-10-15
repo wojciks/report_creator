@@ -36,7 +36,7 @@ d = nav_data()
 DICTIONARY = merge_two_dicts(excel_data_source(data['FIRST_DATA']), d)
 
 conn = history_process.check_and_update_database(d)  #in the end DICTIONARY will go here as parameter
-print(history_process.voyage_distance_time_avg_speed(conn, DICTIONARY['~VOY~']))
+# print(history_process.voyage_distance_time_avg_speed(conn, DICTIONARY['~VOY~']))
 
 for filename in os.listdir(data['TEMPLATE_DIRECTORY']):
     txt_file_creation(f'{filename}'[:-4], template_text_file_read(f'{data["TEMPLATE_DIRECTORY"]}{filename}'))

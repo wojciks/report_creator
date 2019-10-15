@@ -1,39 +1,49 @@
 from datetime import datetime, timedelta
+from dateutil import parser
+from gui import data_from_gui
+from history_process import voyage_distance_time_avg_speed, last_event_data
+import sqlite3
 
 
 def nav_data():
+    last_event = last_event_data()
+    voy_data = voyage_distance_time_avg_speed(sqlite3.connect('data_history.db'), data_from_gui[0])
+    time_local = datetime(data_from_gui[2], data_from_gui[3], data_from_gui[4], data_from_gui[5], data_from_gui[6])
+    time_utc = time_local - timedelta(hours=float(data_from_gui[7]))
+    eta_time_local = datetime(data_from_gui[25], data_from_gui[26], data_from_gui[27], data_from_gui[28], data_from_gui[29])
+    time_from_last = (time_utc - parser.parse(last_event[3])).total_seconds()
+    latitude = f'{data_from_gui[18]}-{data_from_gui[19]}{data_from_gui[20]}'
+    longitude = f'{data_from_gui[21]}-{data_from_gui[22]}{data_from_gui[23]}'
+    remaining = last_event[4] - data_from_gui[17]
 
-    user_dict = {  # {f'~{key}~': input(f'Insert data for {key}: ') for key in USER_DATA_ENTRY_FIELDS}
-    '~VOY~': '325',
-    '~EVENT~': 'NOONS',
+    user_dict = {
+    '~VOY~': data_from_gui[0],
+    '~EVENT~': data_from_gui[1],
     '~LOCATION~': 'AT SEA',
-    '~TIMELOCAL~': datetime(2019, 9, 6, 10, 24),
-    '~TZ~': '2',
-    '~LAT~': '50-04.9N',
-    '~LON~': '019-55.2E',
-    '~GPSDIST~': '250',
-    '~TIMEFROMLAST~': '24',
-    '~REMAININGDIST~': '3300',
-    '~LOGFROMLAST~': '230',
+    '~TIMELOCAL~': time_local,
+    '~TZ~': data_from_gui[7],
+    '~TIMEUTC~': time_utc,
+    '~LAT~': latitude,
+    '~LON~': longitude,
+    '~GPSDIST~': data_from_gui[17],
+    '~TIMEFROMLAST~': time_from_last,
+    '~REMAININGDIST~': remaining,
+    '~LOGFROMLAST~': data_from_gui[16],
     '~POBTIMELOCAL~': '2019-09-06 08:24',
     '~POFFTIMELOCAL~': '2019-09-06 10:24',
-    '~NEXTPORT~': 'SG  SIN',
-    '~ETATIMELOCAL~': '2019-09-30 10:00',
-    '~ETATZ~': '8',
-    '~WINDDIR~': 'SSW',
-    '~WINDFORCEKTS~': '15',
-    '~SEAHEIGHT~': '0.5',
-    '~SEADIR~': 'SSW',
-    '~SWELL~': '0.5',
-    '~BILGES~': 'DRY',
-    '~REMARKS~': 'No remarks',
-    '~MASTER~': 'Jan Kowalski'}
+    '~NEXTPORT~': data_from_gui[24],
+    '~ETATIMELOCAL~': eta_time_local,
+    '~ETATZ~': data_from_gui[30],
+    '~WINDDIR~': data_from_gui[10],
+    '~WINDFORCEKTS~': data_from_gui[11],
+    '~SEAHEIGHT~': data_from_gui[12],
+    '~SEADIR~': data_from_gui[13],
+    '~SWELL~': data_from_gui[14],
+    '~BILGES~': data_from_gui[31],
+    '~REMARKS~': data_from_gui[33],
+    '~MASTER~': data_from_gui[32]}
 
     user_dict['~GPSAVGSPD~'] = float(user_dict['~GPSDIST~']) / float(user_dict['~TIMEFROMLAST~'])
-
-    user_dict['~TIMEUTC~'] = user_dict['~TIMELOCAL~'] - timedelta(hours=int(user_dict['~TZ~']))
-    user_dict['~TIMEUTC~'] = user_dict['~TIMEUTC~'].strftime("%Y-%m-%d %H:%M")
-    user_dict['~TIMELOCAL~'] = user_dict['~TIMELOCAL~'].strftime("%Y-%m-%d %H:%M")
 
     if int(user_dict['~WINDFORCEKTS~']) < 1:
         user_dict['~WINDFORCEB~'] = 0
