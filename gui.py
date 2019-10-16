@@ -6,8 +6,6 @@ from history_process import voyage_distance_time_avg_speed, last_event_data
 import sqlite3
 
 
-
-
 def gui_window():
     voy_info = [[sg.Text('Voyage:', size=(35, 1)), sg.InputText('325', size=(20, 1))],
                 [sg.Text('Event:', size=(35, 1)),
@@ -18,11 +16,11 @@ def gui_window():
                  [sg.Text('YYYY:', size=(6, 1)),
                  sg.InputText('2019', size=(4, 1)),
                  sg.Text('MM:', size=(3, 1)),
-                 sg.InputText('09', size=(3, 1)),
-                 sg.Text('DD:', size=(3, 1)),
-                 sg.InputText('12', size=(3, 1)),
-                 sg.Text('HH:', size=(3, 1)),
                  sg.InputText('10', size=(3, 1)),
+                 sg.Text('DD:', size=(3, 1)),
+                 sg.InputText('16', size=(3, 1)),
+                 sg.Text('HH:', size=(3, 1)),
+                 sg.InputText('08', size=(3, 1)),
                  sg.Text('mm:', size=(4, 1)),
                  sg.InputText('24', size=(3, 1))],
 
@@ -93,39 +91,39 @@ def gui_window():
 
                 [sg.InputText('No remarks', size=(57, 1))],
 
-                [sg.Button('Calculate')],
+                [sg.Button('Calculate', bind_return_key=True)],
 
                 # Voyage calculations to be made:
 
                 [sg.Text('Time from last event:', size=(35, 1)),
-                 sg.Text('time_from_last', size=(20, 1))],
+                 sg.Text('', key='time_from_last', size=(20, 1))],
 
                 [sg.Text('Average GPS speed from last event:', size=(35, 1)),
-                 sg.Text('avg_gps_spd', size=(20, 1))],
+                 sg.Text('', key='avg_gps_spd', size=(20, 1))],
 
                 [sg.Text('Average log speed from last event:', size=(35, 1)),
-                 sg.Text('avg_log_spd', size=(20, 1))],
+                 sg.Text('', key='avg_log_spd', size=(20, 1))],
 
                 [sg.Text('Current:', size=(35, 1)),
-                 sg.Text('current', size=(20, 1))],
+                 sg.InputText(key='current', size=(20, 1))],
 
                 [sg.Text('Total steaming time:', size=(35, 1)),
-                 sg.Text('voy_time', size=(20, 1))],
+                 sg.Text('', key='voy_time', size=(20, 1))],
 
                 [sg.Text('Total GPS distance:', size=(35, 1)),
-                 sg.Text('voy_dist', size=(20, 1))],
+                 sg.InputText(key='voy_dist', size=(20, 1))],
 
                 [sg.Text('Voyage average speed:', size=(35, 1)),
-                 sg.Text('voy_avg_spd', size=(20, 1))],
+                 sg.Text('', key='voy_avg_spd', size=(20, 1))],
 
                 [sg.Text('Total log distance:', size=(35, 1)),
-                 sg.Text('voy_log_spd', size=(20, 1))],
+                 sg.Text('', key='voy_log_dist', size=(20, 1))],
 
                 [sg.Text('Remaining distance:', size=(35, 1)),
-                 sg.Text('rem_dist', size=(20, 1))],
+                 sg.InputText(key='rem_dist', size=(20, 1))],
 
                 [sg.Text('ETA with present speed:', size=(35, 1)),
-                 sg.Text('real_eta', size=(20, 1))]
+                 sg.Text('', key='real_eta', size=(20, 1))]
                 ]
 
     er_info = [[sg.Text('HFO ROB:', size=(35, 1)), sg.InputText(er_excel['~HFOROB~'], size=(20, 1))],
@@ -215,6 +213,53 @@ def gui_window():
         if event in (None, 'Cancel'):  # if user closes window or clicks cancel
             break
         elif event == 'Calculate':
+            time_local = datetime(int(values[2]), int(values[3]), int(values[4]),
+                                  int(values[5]), int(values[6]))
+            time_utc = time_local - timedelta(hours=float(values[7]))
+            if last_event[4] is None:
+                time_from_last_display = time_from_last = 0
+            else:
+                time_from_last = (time_utc - parser.parse(last_event[3])).total_seconds()
+
+                n = time_from_last % (24 * 3600)
+                hour = n // 3600
+
+                n %= 3600
+                minutes = n // 60
+
+                time_from_last_display = f'{int(hour)}:{int(minutes)}'
+
+            avg_gps_spd = float(values[17]) / (time_from_last / 3600)
+            avg_log_spd = float(values[16]) / (time_from_last / 3600)
+            current = avg_gps_spd - avg_log_spd
+
+            voy_time = time_from_last + last_event[5]
+            days = voy_time / (24 * 3600)
+            n1 = voy_time % (24 * 3600)
+            hour1 = n1 // 3600
+            n1 %= 3600
+            minutes1 = n1 // 60
+            voy_time_display = f'{int(days)} days, {int(hour1)}:{int(minutes1)}'
+
+            voy_dist = float(values[17]) + last_event[6]
+
+            voy_avg_spd = voy_dist / (voy_time / 3600)
+
+            voy_log_dist = float(values[16]) + float(last_event[7])
+
+            rem_dist = float(last_event[4]) - float(values[17])
+
+            window.Element('time_from_last').Update(time_from_last_display)
+            window.Element('avg_gps_spd').Update(avg_gps_spd)
+            window.Element('avg_log_spd').Update(avg_log_spd)
+            window.Element('current').Update(current)
+            window.Element('voy_time').Update(voy_time_display)
+            window.Element('voy_dist').Update(voy_dist)
+            window.Element('voy_avg_spd').Update(voy_avg_spd)
+            window.Element('voy_log_dist').Update(voy_log_dist)
+            window.Element('rem_dist').Update(rem_dist)
+            # window.Element('real_eta').Update(real_eta)
+
 
 
         for i in range(0, 84):
@@ -224,8 +269,7 @@ def gui_window():
 
 
 def nav_data(data_from_gui):
-    last_event = last_event_data()
-    voy_data = voyage_distance_time_avg_speed(sqlite3.connect('data_history.db'), data_from_gui[0])
+    # voy_data = voyage_distance_time_avg_speed(sqlite3.connect('data_history.db'), data_from_gui[0])
     time_local = datetime(int(data_from_gui[2]), int(data_from_gui[3]), int(data_from_gui[4]), int(data_from_gui[5]), int(data_from_gui[6]))
     time_utc = time_local - timedelta(hours=float(data_from_gui[7]))
     eta_time_local = datetime(int(data_from_gui[25]), int(data_from_gui[26]), int(data_from_gui[27]), int(data_from_gui[28]), int(data_from_gui[29]))
@@ -299,6 +343,7 @@ def nav_data(data_from_gui):
 
 
 er_excel = excel_data_source(data['FIRST_DATA'])
+last_event = last_event_data()
 gui_data = gui_window()
 user_entered_data = nav_data(gui_data)
 print(user_entered_data)

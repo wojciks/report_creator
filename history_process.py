@@ -22,7 +22,8 @@ def check_and_update_database(data_dictionary):
             COURSE          INTEGER,
             GPSDIST         REAL,
             GPSAVGSPD       REAL,
-            VOYDIST         INTEGER,
+            VOYDIST         REAL,
+            VOYLOGDIST      REAL,
             VOYTIME         INTEGER,
             REMAININGDIST   REAL,
             VOYGPSAVGSPD    REAL,
@@ -88,5 +89,6 @@ def voyage_distance_time_avg_speed(conn, voyage_no):
 def last_event_data():
     conn = sqlite3.connect('data_history.db')
     c = conn.cursor()
-    c.execute('SELECT VOY, EVENT, TZ, TIMEUTC, REMAININGDIST FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
-    return c.fetchone()
+    c.execute('SELECT VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
+    data = c.fetchone()
+    return data
