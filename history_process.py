@@ -12,9 +12,9 @@ def check_and_update_database(data_dictionary):
             ID              INTEGER         PRIMARY KEY,
             VOY             VARCHAR(10)     NOT NULL,
             EVENT           VARCHAR(10)     NOT NULL,
-            LOCATION        VARCHAR(50)     NOT NULL,
+            LOCATION        VARCHAR(50),
             TIMELOCAL       INTEGER         NOT NULL, 
-            TZ              INTEGER         NOT NULL,
+            TZ              REAL            NOT NULL,
             TIMEUTC         INTEGER,
             TIMEFROMLAST    INTEGER,
             LAT             CHARACTER(8)    NOT NULL,
@@ -31,12 +31,9 @@ def check_and_update_database(data_dictionary):
             LOGSPDLAST      REAL,
             CURRENTSPD      REAL,
             
-            POBTIMELOCAL    INTEGER,
-            POFFTIMELOCAL   INTEGER,
-            
             NEXTPORT        VARCHAR(50),
             ETATIMELOCAL    INTEGER,   
-            ETATZ           INTEGER,
+            ETATZ           REAL,
             ETATIMEUTC      INTEGER, 
             WINDDIR         VARCHAR(3),
             WINDFORCEKTS    INTEGER,
@@ -49,6 +46,45 @@ def check_and_update_database(data_dictionary):
             BILGES          VARCHAR(50),
             REMARKS         VARCHAR(150),
             MASTER          VARCHAR(50),
+            
+            HFOROB              REAL,
+            MDOROB              REAL,
+            LOCYLROB            REAL,
+            LOMEROB             REAL,
+            LOAUXROB            REAL,
+            LOTOTALROB          REAL,
+            FWROB               REAL,
+            FWPROD              REAL,
+            FWCONS              REAL,
+            MEHFOCONS           REAL,
+            MEMDOCONS           REAL,
+            AUXHFOCONS          REAL,
+            AUXMDOCONS          REAL,
+            BOILERHFOCONS       REAL,
+            BOILERMDOCONS       REAL,
+            TOTALHFOCONS        REAL,
+            TOTALMDOCONS        REAL,
+            LOCYLCONS           REAL,
+            LOMECONS            REAL,
+            LOAUXCONS           REAL,
+            TOTALLOCONS         REAL,
+            RPM                 REAL,
+            MEDIST              REAL,
+            MESPD               REAL,
+            SLIP                REAL,
+            MEKW                REAL,
+            MEKWH               REAL,
+            MELOAD              REAL,
+            MEGOV               REAL,
+            AUXTIME             REAL,
+            AUXKW               REAL,
+            AUXKWH              REAL,
+            SLUDGETK            REAL,
+            OILYBILGETK         REAL,
+            INCINERATORSETTLINGTK REAL,
+            INCINERATORSERVICETK REAL,
+            BILGEWATERTK        REAL,
+            SLUDGETOTAL         REAL, 
             
             IFCARGO             INTEGER,  
             COMMENCECARGOLOCAL  INTEGER,
@@ -67,28 +103,21 @@ def check_and_update_database(data_dictionary):
             ETDLOCAL            INTEGER,
             ETDUTC              INTEGER)''')
     c = conn.cursor()
-    key_string = str(list(data_dictionary.keys())).replace('~','').replace('[','').replace(']','').replace("'", "")
-    value_string = str(list(data_dictionary.values())).replace('[','').replace(']','')
+    key_string = str(list(data_dictionary.keys())).replace('~', '').replace('[', '').replace(']', '').replace("'", "")
+    value_string = str(list(data_dictionary.values())).replace('[', '').replace(']', '')
     c.execute(f'INSERT INTO VOYAGE_EVENT ({key_string}) VALUES ({value_string});')
     conn.commit()
     return conn
 
 
-def voyage_distance_time_avg_speed(conn, voyage_no):
-    c = conn.cursor()
-    c.execute(f'SELECT SUM(GPSDIST) FROM VOYAGE_EVENT WHERE VOY = {voyage_no} and (EVENT = "NOONS" or EVENT = "EOSP")')
-    voy_dist = float(c.fetchone()[0])
-    c.execute(f'SELECT SUM(TIMEFROMLAST) FROM VOYAGE_EVENT WHERE VOY = {voyage_no} and (EVENT = "NOONS" or EVENT = "EOSP")')
-    voy_time = float(c.fetchone()[0])
-    voy_speed = voy_dist / voy_time
-    return {'~VOYDIST~': voy_dist,
-            '~VOYTIME~': voy_time,
-            '~VOYGPSAVGSPD~': voy_speed}
-
-
 def last_event_data():
     conn = sqlite3.connect('data_history.db')
     c = conn.cursor()
-    c.execute('SELECT VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
+    c.execute(
+        'SELECT '
+        'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER, '
+        'REMARKS '
+        'FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
     data = c.fetchone()
+    conn.close()
     return data
