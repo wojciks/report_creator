@@ -7,8 +7,22 @@ from history_process import last_event_data, check_and_update_database
 
 def gui_window():
     today = datetime.today()
-    last_eta = parser.parse(last_event[9])
-    voy_info = [[sg.Text('Voyage:', size=(35, 1)), sg.InputText(last_event[0], size=(20, 1))],  #0
+    if last_event is None:
+        voyage_no = time_zone = next_port = eta_year = eta_month = eta_day = eta_hour = eta_minute = dest_tz = master = remarks = ''
+    else:   
+        voyage_no = last_event[0]
+        time_zone = last_event[2]
+        next_port = last_event[8]
+        last_eta = parser.parse(last_event[9])
+        eta_year = last_eta.year
+        eta_month = last_eta.month
+        eta_day = last_eta.day
+        eta_hour = last_eta.hour
+        eta_minute = last_eta.minute
+        dest_tz = last_event[10]
+        master = last_event[11]
+        remarks = last_event[12]
+    voy_info = [[sg.Text('Voyage:', size=(35, 1)), sg.InputText(voyage_no, size=(20, 1))],  #0
                 [sg.Text('Event:', size=(35, 1)),
                  sg.Drop(values=(
                  'Noon Sea', 'Noon River', 'Noon Port', 'Arrival', 'Departure', 'BOSP', 'EOSP', 'Drop Anchor',
@@ -23,12 +37,12 @@ def gui_window():
                  sg.Text('DD:', size=(3, 1)),
                  sg.InputText(today.day, size=(3, 1)),  #4
                  sg.Text('HH:', size=(3, 1)),
-                 sg.InputText('10', size=(3, 1)),  #5
+                 sg.InputText(today.hour, size=(3, 1)),  #5
                  sg.Text('mm:', size=(4, 1)),
-                 sg.InputText('24', size=(3, 1))],  #6
+                 sg.InputText(today.minute, size=(3, 1))],  #6
 
                 [sg.Text('Time Zone: (HH,H - if W):', size=(35, 1)),
-                 sg.InputText(last_event[2], size=(20, 1))],  #7
+                 sg.InputText(time_zone, size=(20, 1))],  #7
 
                 [sg.Text('Pressure:', size=(35, 1)),
                  sg.InputText('1030', size=(20, 1))],  #8
@@ -55,10 +69,10 @@ def gui_window():
                  sg.InputText('092', size=(20, 1))],  #15
 
                 [sg.Text('Log distance from last event:', size=(35, 1)),
-                 sg.InputText('230.5', size=(20, 1))],  #16
+                 sg.InputText('158', size=(20, 1))],  #16
 
                 [sg.Text('GPS distance from last event:', size=(35, 1)),
-                 sg.InputText('225.8', size=(20, 1))],  #17
+                 sg.InputText('160', size=(20, 1))],  #17
 
                 [sg.Text('Latitude:', size=(35, 1)),
                  sg.InputText('52', size=(5, 1)), sg.InputText('15.6', size=(5, 1)),
@@ -69,120 +83,123 @@ def gui_window():
                  sg.Drop(values=('E', 'W'), size=(2, 1))],  #21, 22, 23
 
                 [sg.Text('Next port:', size=(35, 1)),
-                 sg.InputText(last_event[8], size=(20, 1))], #24
+                 sg.InputText(next_port, size=(20, 1))], #24
 
                 [sg.Text('ETA:', size=(35, 1))],
                 [sg.Text('YYYY:', size=(6, 1)),
-                 sg.InputText(last_eta.year, size=(4, 1)),  #25
+                 sg.InputText(eta_year, size=(4, 1)),  #25
                  sg.Text('MM:', size=(3, 1)),
-                 sg.InputText(last_eta.month, size=(3, 1)),  #26
+                 sg.InputText(eta_month, size=(3, 1)),  #26
                  sg.Text('DD:', size=(3, 1)),
-                 sg.InputText(last_eta.day, size=(3, 1)),  #27
+                 sg.InputText(eta_day, size=(3, 1)),  #27
                  sg.Text('HH:', size=(3, 1)),
-                 sg.InputText(last_eta.hour, size=(3, 1)),  #28
+                 sg.InputText(eta_hour, size=(3, 1)),  #28
                  sg.Text('mm:', size=(4, 1)),
-                 sg.InputText(last_eta.minute, size=(3, 1))],  #29
+                 sg.InputText(eta_minute, size=(3, 1))],  #29
 
                 [sg.Text("Destinantion's Time Zone: (HH,H - if W):", size=(35, 1)),
-                 sg.InputText(last_event[10], size=(20, 1))],  #30
+                 sg.InputText(dest_tz, size=(20, 1))],  #30
 
                 [sg.Text('Bilges:', size=(35, 1)),
                  sg.InputText('Dry', size=(20, 1))],  #31
 
                 [sg.Text('Master:', size=(35, 1)),
-                 sg.InputText(last_event[11], size=(20, 1))],  #32
+                 sg.InputText(master, size=(20, 1))],  #32
 
                 [sg.Text('Remarks:', size=(35, 1))],
 
-                [sg.Multiline(last_event[12], size=(57, 5))],  #33
+                [sg.Multiline(remarks, size=(57, 5))],  #33
 
                 [sg.Button('Calculate')],
 
                 # Voyage calculations to be made:
 
                 [sg.Text('Time from last event:', size=(35, 1)),
-                 sg.Text('', key='time_from_last', size=(20, 1))],
+                 sg.InputText(key='time_from_last', size=(20, 1))],
 
                 [sg.Text('Average GPS speed from last event:', size=(35, 1)),
-                 sg.Text('', key='avg_gps_spd', size=(20, 1))],
+                 sg.InputText(key='avg_gps_spd', size=(20, 1))],
 
                 [sg.Text('Average log speed from last event:', size=(35, 1)),
-                 sg.Text('', key='avg_log_spd', size=(20, 1))],
+                 sg.InputText(key='avg_log_spd', size=(20, 1))],
 
                 [sg.Text('Current:', size=(35, 1)),
                  sg.InputText(key='current', size=(20, 1))],
 
                 [sg.Text('Total steaming time:', size=(35, 1)),
-                 sg.Text('', key='voy_time', size=(20, 1))],
+                 sg.InputText(key='voy_time', size=(20, 1))],
 
                 [sg.Text('Total GPS distance:', size=(35, 1)),
-                 sg.InputText(key='voy_dist', size=(20, 1))],
+                 sg.InputText('', key='voy_dist', size=(20, 1))],
 
                 [sg.Text('Voyage average speed:', size=(35, 1)),
-                 sg.Text('', key='voy_avg_spd', size=(20, 1))],
+                 sg.InputText(key='voy_avg_spd', size=(20, 1))],
 
                 [sg.Text('Total log distance:', size=(35, 1)),
-                 sg.Text('', key='voy_log_dist', size=(20, 1))],
+                 sg.InputText(key='voy_log_dist', size=(20, 1))],
 
                 [sg.Text('Remaining distance:', size=(35, 1)),
                  sg.InputText(key='rem_dist', size=(20, 1))],
 
                 [sg.Text('ETA (destination ZT) with present speed:', size=(35, 1)),
-                 sg.Text('', key='real_eta', size=(20, 1))]
+                 sg.Text('', key='real_eta', size=(20, 1))],
+
+                [sg.Text('Speed required for given ETA:', size=(35, 1)),
+                 sg.Text('', key='speed_req', size=(20, 1))]
                 ]
 
-    er_info = [[sg.Text('HFO ROB:', size=(35, 1)), sg.InputText(er_excel['~HFOROB~'], size=(20, 1))],
-               [sg.Text('MDO ROB:', size=(35, 1)), sg.InputText(er_excel['~MDOROB~'], size=(20, 1))],
-               [sg.Text('Lube oil (cylinders) ROB:', size=(35, 1)), sg.InputText(er_excel['~LOCYLROB~'], size=(20, 1))],
+    er_info = [[sg.Text('HFO ROB:', size=(35, 1)), sg.InputText(er_excel['~HFOROB~'], size=(20, 1), key='HFOROB')],
+               [sg.Text('MDO ROB:', size=(35, 1)), sg.InputText(er_excel['~MDOROB~'], size=(20, 1), key='MDOROB')],
+               [sg.Text('Lube oil (cylinders) ROB:', size=(35, 1)), sg.InputText(er_excel['~LOCYLROB~'], size=(20, 1), key='LOCYLROB')],
                [sg.Text('Lube oil (Main Engine) ROB:', size=(35, 1)),
-                sg.InputText(er_excel['~LOMEROB~'], size=(20, 1))],
-               [sg.Text('Lube oil (Aux engines):', size=(35, 1)), sg.InputText(er_excel['~LOAUXROB~'], size=(20, 1))],
-               [sg.Text('Lube oil (Total):', size=(35, 1)), sg.InputText(er_excel['~LOTOTALROB~'], size=(20, 1))],
-               [sg.Text('ME HFO consumption:', size=(35, 1)), sg.InputText(er_excel['~MEHFOCONS~'], size=(20, 1))],
-               [sg.Text('ME MDO consumption:', size=(35, 1)), sg.InputText(er_excel['~MEMDOCONS~'], size=(20, 1))],
+                sg.InputText(er_excel['~LOMEROB~'], size=(20, 1), key='LOMEROB')],
+               [sg.Text('Lube oil (Aux engines) ROB:', size=(35, 1)), sg.InputText(er_excel['~LOAUXROB~'], size=(20, 1), key='LOAUXROB')],
+               [sg.Text('Lube oil (Total) ROB:', size=(35, 1)), sg.InputText(er_excel['~LOTOTALROB~'], size=(20, 1), key='LOTOTALROB')],
+               [sg.Text('ME HFO consumption:', size=(35, 1)), sg.InputText(er_excel['~MEHFOCONS~'], size=(20, 1), key='MEHFOCONS')],
+               [sg.Text('ME MDO consumption:', size=(35, 1)), sg.InputText(er_excel['~MEMDOCONS~'], size=(20, 1), key='MEMDOCONS')],
                [sg.Text('Aux engines HFO consumption:', size=(35, 1)),
-                sg.InputText(er_excel['~AUXHFOCONS~'], size=(20, 1))],
+                sg.InputText(er_excel['~AUXHFOCONS~'], size=(20, 1), key='AUXHFOCONS')],
                [sg.Text('Aux engines MDO consumption:', size=(35, 1)),
-                sg.InputText(er_excel['~AUXMDOCONS~'], size=(20, 1))],
+                sg.InputText(er_excel['~AUXMDOCONS~'], size=(20, 1), key='AUXMDOCONS')],
                [sg.Text('Boiler HFO consumption:', size=(35, 1)),
-                sg.InputText(er_excel['~BOILERHFOCONS~'], size=(20, 1))],
+                sg.InputText(er_excel['~BOILERHFOCONS~'], size=(20, 1), key='BOILERHFOCONS')],
                [sg.Text('Boiler MDO consumption:', size=(35, 1)),
-                sg.InputText(er_excel['~BOILERMDOCONS~'], size=(20, 1))],
+                sg.InputText(er_excel['~BOILERMDOCONS~'], size=(20, 1), key='BOILERMDOCONS')],
                [sg.Text('Total HFO consumption:', size=(35, 1)),
-                sg.InputText(er_excel['~TOTALHFOCONS~'], size=(20, 1))],
+                sg.InputText(er_excel['~TOTALHFOCONS~'], size=(20, 1), key='TOTALHFOCONS')],
                [sg.Text('Total MDO consumption:', size=(35, 1)),
-                sg.InputText(er_excel['~TOTALMDOCONS~'], size=(20, 1))],
-               [sg.Text('Lube oil consumpton (cylinders):', size=(35, 1)),
-                sg.InputText(er_excel['~LOCYLCONS~'], size=(20, 1))],
-               [sg.Text('Lube oil consumpton (ME):', size=(35, 1)), sg.InputText(er_excel['~LOMECONS~'], size=(20, 1))],
-               [sg.Text('Lube oil consumpton (aux engines):', size=(35, 1)),
-                sg.InputText(er_excel['~LOAUXCONS~'], size=(20, 1))],
-               [sg.Text('Lube oil total consumpton:', size=(35, 1)),
-                sg.InputText(er_excel['~TOTALLOCONS~'], size=(20, 1))],
-               [sg.Text('Average RPM:', size=(35, 1)), sg.InputText(er_excel['~RPM~'], size=(20, 1))],
-               [sg.Text('ME distance:', size=(35, 1)), sg.InputText(er_excel['~MEDIST~'], size=(20, 1))],
-               [sg.Text('ME speed:', size=(35, 1)), sg.InputText(er_excel['~MESPD~'], size=(20, 1))],
-               [sg.Text('Slip:', size=(35, 1)), sg.InputText(er_excel['~SLIP~'], size=(20, 1))],
-               [sg.Text('ME average kW:', size=(35, 1)), sg.InputText(er_excel['~MEKW~'], size=(20, 1))],
-               [sg.Text('ME total kWh:', size=(35, 1)), sg.InputText(er_excel['~MEKWH~'], size=(20, 1))],
-               [sg.Text('ME load:', size=(35, 1)), sg.InputText(er_excel['~MELOAD~'], size=(20, 1))],
-               [sg.Text('ME governor setting:', size=(35, 1)), sg.InputText(er_excel['~MEGOV~'], size=(20, 1))],
-               [sg.Text('Aux engines total time:', size=(35, 1)), sg.InputText(er_excel['~AUXTIME~'], size=(20, 1))],
-               [sg.Text('Aux engines average kW:', size=(35, 1)), sg.InputText(er_excel['~AUXKW~'], size=(20, 1))],
-               [sg.Text('Aux engines total kWh:', size=(35, 1)), sg.InputText(er_excel['~AUXKWH~'], size=(20, 1))],
-               [sg.Text('Fresh water ROB:', size=(35, 1)), sg.InputText(er_excel['~FWROB~'], size=(20, 1))],
-               [sg.Text('Fresh water produced:', size=(35, 1)), sg.InputText(er_excel['~FWPROD~'], size=(20, 1))],
-               [sg.Text('Fresh water consumed:', size=(35, 1)), sg.InputText(er_excel['~FWCONS~'], size=(20, 1))],
-               [sg.Text('Sludge tank content:', size=(35, 1)), sg.InputText(er_excel['~SLUDGETK~'], size=(20, 1))],
+                sg.InputText(er_excel['~TOTALMDOCONS~'], size=(20, 1), key='TOTALMDOCONS')],
+               [sg.Text('Lube oil consumption (cylinders):', size=(35, 1)),
+                sg.InputText(er_excel['~LOCYLCONS~'], size=(20, 1), key='LOCYLCONS')],
+               [sg.Text('Lube oil consumption (ME):', size=(35, 1)), sg.InputText(er_excel['~LOMECONS~'], size=(20, 1), key='LOMECONS')],
+               [sg.Text('Lube oil consumption (aux engines):', size=(35, 1)),
+                sg.InputText(er_excel['~LOAUXCONS~'], size=(20, 1), key='LOAUXCONS')],
+               [sg.Text('Lube oil total consumption:', size=(35, 1)),
+                sg.InputText(er_excel['~TOTALLOCONS~'], size=(20, 1), key='TOTALLOCONS')],
+               [sg.Text('Average RPM:', size=(35, 1)), sg.InputText(er_excel['~RPM~'], size=(20, 1), key='RPM')],
+               [sg.Text('ME distance:', size=(35, 1)), sg.InputText(er_excel['~MEDIST~'], size=(20, 1), key='MEDIST')],
+               [sg.Text('ME speed:', size=(35, 1)), sg.InputText(er_excel['~MESPD~'], size=(20, 1), key='MESPD')],
+               [sg.Text('Slip:', size=(35, 1)), sg.InputText(er_excel['~SLIP~'], size=(20, 1), key='SLIP')],
+               [sg.Text('ME average kW:', size=(35, 1)), sg.InputText(er_excel['~MEKW~'], size=(20, 1), key='MEKW')],
+               [sg.Text('ME total kWh:', size=(35, 1)), sg.InputText(er_excel['~MEKWH~'], size=(20, 1), key='MEKWH')],
+               [sg.Text('ME load:', size=(35, 1)), sg.InputText(er_excel['~MELOAD~'], size=(20, 1), key='MELOAD')],
+               [sg.Text('ME governor setting:', size=(35, 1)), sg.InputText(er_excel['~MEGOV~'], size=(20, 1), key='MEGOV')],
+               [sg.Text('Aux engines total time:', size=(35, 1)), sg.InputText(er_excel['~AUXTIME~'], size=(20, 1), key='AUXTIME')],
+               [sg.Text('Aux engines average kW:', size=(35, 1)), sg.InputText(er_excel['~AUXKW~'], size=(20, 1), key='AUXKW')],
+               [sg.Text('Aux engines total kWh:', size=(35, 1)), sg.InputText(er_excel['~AUXKWH~'], size=(20, 1), key='AUXKWH')],
+               [sg.Text('Fresh water ROB:', size=(35, 1)), sg.InputText(er_excel['~FWROB~'], size=(20, 1), key='FWROB')],
+               [sg.Text('Fresh water produced:', size=(35, 1)), sg.InputText(er_excel['~FWPROD~'], size=(20, 1), key='FWPROD')],
+               [sg.Text('Fresh water consumed:', size=(35, 1)), sg.InputText(er_excel['~FWCONS~'], size=(20, 1), key='FWCONS')],
+               [sg.Text('Sludge tank content:', size=(35, 1)), sg.InputText(er_excel['~SLUDGETK~'], size=(20, 1), key='SLUDGETK')],
                [sg.Text('Oily bilge tank content:', size=(35, 1)),
-                sg.InputText(er_excel['~OILYBILGETK~'], size=(20, 1))],
+                sg.InputText(er_excel['~OILYBILGETK~'], size=(20, 1), key='OILYBILGETK')],
                [sg.Text('Incinerator settling tank content:', size=(35, 1)),
-                sg.InputText(er_excel['~INCINERATORSETTLINGTK~'], size=(20, 1))],
+                sg.InputText(er_excel['~INCINERATORSETTLINGTK~'], size=(20, 1), key='INCINERATORSETTLINGTK')],
                [sg.Text('Incinerator service tank content:', size=(35, 1)),
-                sg.InputText(er_excel['~INCINERATORSERVICETK~'], size=(20, 1))],
+                sg.InputText(er_excel['~INCINERATORSERVICETK~'], size=(20, 1), key='INCINERATORSERVICETK')],
                [sg.Text('Bilge water tank content:', size=(35, 1)),
-                sg.InputText(er_excel['~BILGEWATERTK~'], size=(20, 1))],
-               [sg.Text('Sludge total:', size=(35, 1)), sg.InputText(er_excel['~SLUDGETOTAL~'], size=(20, 1))]
+                sg.InputText(er_excel['~BILGEWATERTK~'], size=(20, 1), key='BILGEWATERTK')],
+               [sg.Text('Sludge total:', size=(35, 1)), sg.InputText(er_excel['~SLUDGETOTAL~'], size=(20, 1), key='SLUDGETOTAL')]
                ]
 
     cargo_info = [[sg.Text('Cargo ops in progress:', size=(35, 1)), sg.Drop(values=('No', 'Yes'), size=(20, 1))],
@@ -219,29 +236,50 @@ def gui_window():
     while True:
         event, values = window.read()
         if event in (None, 'Quit'):  # if user closes window or clicks quit
-            return None
+            break
         if event == 'Calculate':
             time_local = datetime(int(values[2]), int(values[3]), int(values[4]),
                                   int(values[5]), int(values[6]))
             time_utc = time_local - timedelta(hours=float(values[7]))
-            if last_event[4] is None:
-                time_from_last_display = time_from_last = 0
+            eta_lt = datetime(int(values[25]), int(values[26]), int(values[27]),
+                                  int(values[28]), int(values[29]))
+            eta_utc = eta_lt - timedelta(hours=float(values[30]))
+            if last_event is None:
+                time_from_last_string = values['time_from_last'].split(':')
+                time_from_last = timedelta(hours=float(time_from_last_string[0]) + (float(time_from_last_string[1]) / 60)).total_seconds()
+                voy_time = time_from_last
+                voy_dist = float(values[17])
+                voy_log_dist = float(values[16])
+                rem_dist = float(values['rem_dist']) if values['rem_dist'] != '' else 0
+                avg_gps_spd = voy_dist / (time_from_last / 3600)
+                avg_log_spd = voy_log_dist / (time_from_last / 3600)
+                voy_avg_spd = avg_gps_spd
             else:
                 time_from_last = (time_utc - parser.parse(last_event[3])).total_seconds()
 
-                n = time_from_last % (24 * 3600)
-                hour = n // 3600
+                voy_time = time_from_last + int(last_event[5])
 
-                n %= 3600
-                minutes = n // 60
+                voy_dist = float(values[17]) + float(last_event[6])
 
-                time_from_last_display = f'{int(hour)}:{int(minutes)}'
+                voy_log_dist = float(values[16]) + float(last_event[7])
 
-            avg_gps_spd = float(values[17]) / (time_from_last / 3600)
-            avg_log_spd = float(values[16]) / (time_from_last / 3600)
-            current = avg_gps_spd - avg_log_spd
+                rem_dist = float(last_event[4]) - float(values[17])
 
-            voy_time = time_from_last + last_event[5]
+                avg_gps_spd = float(values[17]) / (time_from_last / 3600)
+                avg_log_spd = float(values[16]) / (time_from_last / 3600)
+
+                voy_avg_spd = voy_dist / (voy_time / 3600)
+
+            n = time_from_last % (24 * 3600)
+            hour = n // 3600
+
+            n %= 3600
+            minutes = n // 60
+
+            time_from_last_display = f'{int(hour)}:{int(minutes)}'
+
+            current = int(avg_gps_spd) - int(avg_log_spd)
+
             days = voy_time / (24 * 3600)
             n1 = voy_time % (24 * 3600)
             hour1 = n1 // 3600
@@ -249,15 +287,7 @@ def gui_window():
             minutes1 = n1 // 60
             voy_time_display = f'{int(days)} days, {int(hour1)}:{int(minutes1)}'
 
-            voy_dist = float(values[17]) + last_event[6]
-
-            voy_avg_spd = voy_dist / (voy_time / 3600)
-
-            voy_log_dist = float(values[16]) + float(last_event[7])
-
-            rem_dist = float(last_event[4]) - float(values[17])
-
-            time_rem_hrs = rem_dist / avg_gps_spd
+            time_rem_hrs = rem_dist / avg_gps_spd if avg_gps_spd != 0 else 0
             real_eta = time_utc + timedelta(hours=(time_rem_hrs + float(values[30])))
 
             window.Element('time_from_last').Update(time_from_last_display)
@@ -269,36 +299,82 @@ def gui_window():
             window.Element('voy_avg_spd').Update(voy_avg_spd)
             window.Element('voy_log_dist').Update(voy_log_dist)
             window.Element('rem_dist').Update(rem_dist)
-            window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H%M'))
+            window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H:%M'))
         if event == 'Submit':
             user_dict = {
                 '~VOY~': values[0],
                 '~EVENT~': values[1],
                 '~LOCATION~': 'AT SEA',
-                '~TIMELOCAL~': time_local,
+                '~TIMELOCAL~': time_local.strftime('%Y-%m-%d %H:%M'),
                 '~TZ~': values[7],
-                '~TIMEUTC~': time_utc,
+                '~TIMEUTC~': time_utc.strftime('%Y-%m-%d %H:%M'),
                 '~LAT~': f'{values[18]}-{values[19]}{values[20]}',
                 '~LON~': f'{values[21]}-{values[22]}{values[23]}',
+                '~COURSE~': values[15],
                 '~GPSDIST~': values[17],
                 '~TIMEFROMLAST~': time_from_last,
+                '~GPSAVGSPD~': avg_gps_spd,
                 '~REMAININGDIST~': rem_dist,
                 '~LOGFROMLAST~': values[16],
+                '~LOGSPDLAST~': avg_log_spd,
+                '~CURRENTSPD~': current,
                 '~NEXTPORT~': values[24],
-                '~ETATIMELOCAL~': parser.parse(f'{values[25]}-{values[26]}-{values[27]} {values[28]}:{values[29]}'),
+                '~ETATIMELOCAL~': eta_lt.strftime('%Y-%m-%d %H:%M'),
                 '~ETATZ~': values[30],
+                '~ETATIMEUTC~': eta_utc.strftime('%Y-%m-%d %H:%M'),
                 '~WINDDIR~': values[10],
                 '~WINDFORCEKTS~': values[11],
                 '~SEAHEIGHT~': values[12],
                 '~SEADIR~': values[13],
                 '~SWELL~': values[14],
+                '~AIRTEMP~': values[9],
+                '~PRESSURE~': values[8],
                 '~BILGES~': values[31],
                 '~REMARKS~': values[33],
                 '~MASTER~': values[32],
                 '~VOYDIST~': voy_dist,
                 '~VOYTIME~': voy_time,
                 '~VOYGPSAVGSPD~': voy_avg_spd,
-                '~VOYLOGDIST~': voy_log_dist}
+                '~VOYLOGDIST~': voy_log_dist,
+                '~HFOROB~': values['HFOROB'],
+                '~MDOROB~': values['MDOROB'],
+                '~LOCYLROB~': values['LOCYLROB'],
+                '~LOMEROB~': values['LOMEROB'],
+                '~LOAUXROB~': values['LOAUXROB'],
+                '~LOTOTALROB~': values['LOTOTALROB'],
+                '~FWROB~': values['FWROB'],
+                '~FWPROD~': values['FWPROD'],
+                '~FWCONS~': values['FWCONS'],
+                '~MEHFOCONS~': values['MEHFOCONS'],
+                '~MEMDOCONS~': values['MEMDOCONS'],
+                '~AUXHFOCONS~': values['AUXHFOCONS'],
+                '~AUXMDOCONS~': values['AUXMDOCONS'],
+                '~BOILERHFOCONS~': values['BOILERHFOCONS'],
+                '~BOILERMDOCONS~': values['BOILERMDOCONS'],
+                '~TOTALHFOCONS~': values['TOTALHFOCONS'],
+                '~TOTALMDOCONS~': values['TOTALMDOCONS'],
+                '~LOCYLCONS~': values['LOCYLCONS'],
+                '~LOMECONS~': values['LOMECONS'],
+                '~LOAUXCONS~': values['LOAUXCONS'],
+                '~TOTALLOCONS~': values['TOTALLOCONS'],
+                '~RPM~': values['RPM'],
+                '~MEDIST~': values['MEDIST'],
+                '~MESPD~': values['MESPD'],
+                '~SLIP~': values['SLIP'],
+                '~MEKW~': values['MEKW'],
+                '~MEKWH~': values['MEKWH'],
+                '~MELOAD~': values['MELOAD'],
+                '~MEGOV~': values['MEGOV'],
+                '~AUXTIME~': values['AUXTIME'],
+                '~AUXKW~': values['AUXKW'],
+                '~AUXKWH~': values['AUXKWH'],
+                '~SLUDGETK~': values['SLUDGETK'],
+                '~OILYBILGETK~': values['OILYBILGETK'],
+                '~INCINERATORSETTLINGTK~': values['INCINERATORSETTLINGTK'],
+                '~INCINERATORSERVICETK~': values['INCINERATORSERVICETK'],
+                '~BILGEWATERTK~': values['BILGEWATERTK'],
+                '~SLUDGETOTAL~': values['SLUDGETOTAL']
+                }
 
             if int(user_dict['~WINDFORCEKTS~']) < 1:
                 user_dict['~WINDFORCEB~'] = 0
@@ -328,14 +404,14 @@ def gui_window():
                 user_dict['~WINDFORCEB~'] = 12
             else:
                 user_dict['~WINDFORCEB~'] = 0
-            break
+            # print(user_dict)
+            check_and_update_database(user_dict)
 
     window.close()
-    return user_dict
 
 
 er_excel = excel_data_source(data['FIRST_DATA'])
 last_event = last_event_data()
-gui_data = gui_window()
-print(gui_data)
+gui_window()
+
 

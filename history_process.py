@@ -13,8 +13,8 @@ def check_and_update_database(data_dictionary):
             VOY             VARCHAR(10)     NOT NULL,
             EVENT           VARCHAR(10)     NOT NULL,
             LOCATION        VARCHAR(50),
-            TIMELOCAL       INTEGER         NOT NULL, 
-            TZ              REAL            NOT NULL,
+            TIMELOCAL       VARCHAR         NOT NULL, 
+            TZ              VARCHAR         NOT NULL,
             TIMEUTC         INTEGER,
             TIMEFROMLAST    INTEGER,
             LAT             CHARACTER(8)    NOT NULL,
@@ -32,9 +32,9 @@ def check_and_update_database(data_dictionary):
             CURRENTSPD      REAL,
             
             NEXTPORT        VARCHAR(50),
-            ETATIMELOCAL    INTEGER,   
+            ETATIMELOCAL    VARCHAR,   
             ETATZ           REAL,
-            ETATIMEUTC      INTEGER, 
+            ETATIMEUTC      VARCHAR, 
             WINDDIR         VARCHAR(3),
             WINDFORCEKTS    INTEGER,
             WINDFORCEB      INTEGER,
@@ -98,10 +98,10 @@ def check_and_update_database(data_dictionary):
             BALLASTDAILY        INTEGER,
             SHORECRANESNO       INTEGER,
             SHIPCRANESNO        INTEGER,
-            ETCLOCAL            INTEGER,
-            ETCUTC              INTEGER,
-            ETDLOCAL            INTEGER,
-            ETDUTC              INTEGER)''')
+            ETCLOCAL            VARCHAR,
+            ETCUTC              VARCHAR,
+            ETDLOCAL            VARCHAR,
+            ETDUTC              VARCHAR)''')
     c = conn.cursor()
     key_string = str(list(data_dictionary.keys())).replace('~', '').replace('[', '').replace(']', '').replace("'", "")
     value_string = str(list(data_dictionary.values())).replace('[', '').replace(']', '')
@@ -111,13 +111,16 @@ def check_and_update_database(data_dictionary):
 
 
 def last_event_data():
-    conn = sqlite3.connect('data_history.db')
-    c = conn.cursor()
-    c.execute(
-        'SELECT '
-        'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER, '
-        'REMARKS '
-        'FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
-    data = c.fetchone()
-    conn.close()
+    if os.path.isfile('data_history.db'):
+        conn = sqlite3.connect('data_history.db')
+        c = conn.cursor()
+        c.execute(
+            'SELECT '
+            'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER, '
+            'REMARKS '
+            'FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
+        data = c.fetchone()
+        conn.close()
+    else:
+        data = None
     return data
