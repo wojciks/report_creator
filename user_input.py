@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from dateutil import parser
-from history_process import voyage_distance_time_avg_speed, last_event_data
+from history_process import last_event_data
 import sqlite3
 
 

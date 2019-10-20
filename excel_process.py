@@ -20,3 +20,13 @@ def single_cell_data_read(data_loc, worksheet):
         return worksheet.cell(data_loc[0], data_loc[1]).value
     else:
         return worksheet.cell(data_loc[1], data_loc[0]).value
+
+
+def to_next_excel_entry(reports_ok):
+    if reports_ok == 'Yes':
+        data['FIRST_DATA'] += 1
+        with open('appconf.json', 'w') as outfile:
+            json.dump(data, outfile)
+        return f'Database updated! Next excel entry is no {data["FIRST_DATA"]}!'
+    else:
+        return f'Database not updated! You are still at excel entry no {data["FIRST_DATA"]}!'

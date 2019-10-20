@@ -1,14 +1,15 @@
 import PySimpleGUI as sg
-from excel_process import excel_data_source, data
+from excel_process import excel_data_source, data, to_next_excel_entry
 from datetime import datetime, timedelta
 from dateutil import parser
 from history_process import last_event_data, check_and_update_database
+from text_file_process import report_creation
 
 
 def gui_window():
     today = datetime.today()
     if last_event is None:
-        voyage_no = time_zone = next_port = eta_year = eta_month = eta_day = eta_hour = eta_minute = dest_tz = master = remarks = ''
+        voyage_no = time_zone = next_port = eta_year = eta_month = eta_day = eta_hour = eta_minute = dest_tz = master = ''
     else:   
         voyage_no = last_event[0]
         time_zone = last_event[2]
@@ -21,7 +22,6 @@ def gui_window():
         eta_minute = last_eta.minute
         dest_tz = last_event[10]
         master = last_event[11]
-        remarks = last_event[12]
     voy_info = [[sg.Text('Voyage:', size=(35, 1)), sg.InputText(voyage_no, size=(20, 1))],  #0
                 [sg.Text('Event:', size=(35, 1)),
                  sg.Drop(values=(
@@ -108,7 +108,7 @@ def gui_window():
 
                 [sg.Text('Remarks:', size=(35, 1))],
 
-                [sg.Multiline(remarks, size=(57, 5))],  #33
+                [sg.Multiline(size=(57, 5))],  #33
 
                 [sg.Button('Calculate')],
 
@@ -125,6 +125,9 @@ def gui_window():
 
                 [sg.Text('Current:', size=(35, 1)),
                  sg.InputText(key='current', size=(20, 1))],
+
+                [sg.Text('Wind force in Beaufort scale:', size=(35, 1)),
+                 sg.InputText(key='wind_b', size=(20, 1))],
 
                 [sg.Text('Total steaming time:', size=(35, 1)),
                  sg.InputText(key='voy_time', size=(20, 1))],
@@ -245,50 +248,103 @@ def gui_window():
                                   int(values[28]), int(values[29]))
             eta_utc = eta_lt - timedelta(hours=float(values[30]))
             if last_event is None:
-                time_from_last_string = values['time_from_last'].split(':')
-                time_from_last = timedelta(hours=float(time_from_last_string[0]) + (float(time_from_last_string[1]) / 60)).total_seconds()
-                voy_time = time_from_last
+                time_from_last_seconds = hour_notation_to_seconds(values['time_from_last'])
+                voy_time_seconds = time_from_last_seconds
                 voy_dist = float(values[17])
                 voy_log_dist = float(values[16])
                 rem_dist = float(values['rem_dist']) if values['rem_dist'] != '' else 0
-                avg_gps_spd = voy_dist / (time_from_last / 3600)
-                avg_log_spd = voy_log_dist / (time_from_last / 3600)
-                voy_avg_spd = avg_gps_spd
+                avg_gps_spd = voy_dist / (time_from_last_seconds / 3600)
+                avg_log_spd = voy_log_dist / (time_from_last_seconds / 3600)
             else:
-                time_from_last = (time_utc - parser.parse(last_event[3])).total_seconds()
+                time_from_last_seconds = (time_utc - parser.parse(last_event[3])).total_seconds()
+                last_voy_time = hour_notation_to_seconds(last_event[5])
+                voy_time_seconds = time_from_last_seconds + last_voy_time
 
-                voy_time = time_from_last + int(last_event[5])
+                voy_dist = round(float(values[17]) + float(last_event[6]))
 
-                voy_dist = float(values[17]) + float(last_event[6])
+                voy_log_dist = round(float(values[16]) + float(last_event[7]))
 
-                voy_log_dist = float(values[16]) + float(last_event[7])
+                rem_dist = round(float(last_event[4]) - float(values[17]))
 
-                rem_dist = float(last_event[4]) - float(values[17])
+                avg_gps_spd = round(float(values[17]) / (time_from_last_seconds / 3600), 2)
+                avg_log_spd = round(float(values[16]) / (time_from_last_seconds / 3600), 2)
 
-                avg_gps_spd = float(values[17]) / (time_from_last / 3600)
-                avg_log_spd = float(values[16]) / (time_from_last / 3600)
+            voy_avg_spd = round(voy_dist / (voy_time_seconds / 3600), 2)
 
-                voy_avg_spd = voy_dist / (voy_time / 3600)
-
-            n = time_from_last % (24 * 3600)
+            n = time_from_last_seconds
             hour = n // 3600
-
             n %= 3600
             minutes = n // 60
+            time_from_last_display = f'{int(hour)}:{str(int(minutes)).zfill(2)}'
 
-            time_from_last_display = f'{int(hour)}:{int(minutes)}'
-
-            current = int(avg_gps_spd) - int(avg_log_spd)
-
-            days = voy_time / (24 * 3600)
-            n1 = voy_time % (24 * 3600)
+            n1 = voy_time_seconds % (24 * 3600)
             hour1 = n1 // 3600
             n1 %= 3600
             minutes1 = n1 // 60
-            voy_time_display = f'{int(days)} days, {int(hour1)}:{int(minutes1)}'
+            voy_time_display = f'{int(hour1)}:{str(int(minutes1)).zfill(2)}'
+
+            current = round((avg_gps_spd - avg_log_spd), 2)
+
+            wind_kts = int(values[11])
+            if wind_kts < 1:
+                wind_b = 0
+            elif 1 <= wind_kts <= 3:
+                wind_b = 1
+            elif 4 <= wind_kts <= 6:
+                wind_b = 2
+            elif 7 <= wind_kts <= 10:
+                wind_b = 3
+            elif 11 <= wind_kts <= 16:
+                wind_b = 4
+            elif 17 <= wind_kts <= 21:
+                wind_b = 5
+            elif 22 <= wind_kts <= 27:
+                wind_b = 6
+            elif 28 <= wind_kts <= 33:
+                wind_b = 7
+            elif 34 <= wind_kts <= 40:
+                wind_b = 8
+            elif 41 <= wind_kts <= 47:
+                wind_b = 9
+            elif 48 <= wind_kts <= 55:
+                wind_b = 10
+            elif 56 <= wind_kts <= 63:
+                wind_b = 11
+            elif wind_kts <= 64:
+                wind_b = 12
+            else:
+                wind_b = 0
 
             time_rem_hrs = rem_dist / avg_gps_spd if avg_gps_spd != 0 else 0
             real_eta = time_utc + timedelta(hours=(time_rem_hrs + float(values[30])))
+            time_to_eta = eta_utc - time_utc
+            speed_req = rem_dist / (time_to_eta.total_seconds() / 3600)
+
+            hfo_rob = check_float_value_present(values['HFOROB'])
+            mdo_rob = check_float_value_present(values['MDOROB'])
+            me_hfo_cons = check_float_value_present(values['MEHFOCONS'])
+            me_mdo_cons = check_float_value_present(values['MEMDOCONS'])
+            aux_hfo_cons = check_float_value_present(values['AUXHFOCONS'])
+            aux_mdo_cons = check_float_value_present(values['AUXMDOCONS'])
+            boiler_hfo_cons = check_float_value_present(values['BOILERHFOCONS'])
+            boiler_mdo_cons = check_float_value_present(values['BOILERMDOCONS'])
+            total_hfo_cons = check_float_value_present(values['TOTALHFOCONS'])
+            total_mdo_cons = check_float_value_present(values['TOTALMDOCONS'])
+            lo_cyl_cons = check_int_value_present(values['LOCYLCONS'])
+            lo_me_cons = check_int_value_present(values['LOMECONS'])
+            lo_aux_cons = check_int_value_present(values['LOAUXCONS'])
+            lo_total_cons = check_int_value_present(values['TOTALLOCONS'])
+            rpm = check_float_value_present(values['RPM'])
+            me_dist = check_float_value_present(values['MEDIST'])
+            me_spd = check_float_value_present(values['MESPD'])
+            me_kw = check_float_value_present(values['MEKW'])
+            me_kwh = check_float_value_present(values['MEKWH'])
+
+            slip = percentage(values['SLIP'])
+
+            me_load = percentage(values['MELOAD'])
+
+            me_gov = percentage(values['MEGOV'])
 
             window.Element('time_from_last').Update(time_from_last_display)
             window.Element('avg_gps_spd').Update(avg_gps_spd)
@@ -300,6 +356,8 @@ def gui_window():
             window.Element('voy_log_dist').Update(voy_log_dist)
             window.Element('rem_dist').Update(rem_dist)
             window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H:%M'))
+            window.Element('wind_b').Update(wind_b)
+            window.Element('speed_req').Update(round(speed_req, 2))
         if event == 'Submit':
             user_dict = {
                 '~VOY~': values[0],
@@ -312,7 +370,7 @@ def gui_window():
                 '~LON~': f'{values[21]}-{values[22]}{values[23]}',
                 '~COURSE~': values[15],
                 '~GPSDIST~': values[17],
-                '~TIMEFROMLAST~': time_from_last,
+                '~TIMEFROMLAST~': time_from_last_display,
                 '~GPSAVGSPD~': avg_gps_spd,
                 '~REMAININGDIST~': rem_dist,
                 '~LOGFROMLAST~': values[16],
@@ -323,7 +381,8 @@ def gui_window():
                 '~ETATZ~': values[30],
                 '~ETATIMEUTC~': eta_utc.strftime('%Y-%m-%d %H:%M'),
                 '~WINDDIR~': values[10],
-                '~WINDFORCEKTS~': values[11],
+                '~WINDFORCEKTS~': wind_kts,
+                '~WINDFORCEB~': wind_b,
                 '~SEAHEIGHT~': values[12],
                 '~SEADIR~': values[13],
                 '~SWELL~': values[14],
@@ -333,38 +392,38 @@ def gui_window():
                 '~REMARKS~': values[33],
                 '~MASTER~': values[32],
                 '~VOYDIST~': voy_dist,
-                '~VOYTIME~': voy_time,
+                '~VOYTIME~': voy_time_display,
                 '~VOYGPSAVGSPD~': voy_avg_spd,
                 '~VOYLOGDIST~': voy_log_dist,
-                '~HFOROB~': values['HFOROB'],
-                '~MDOROB~': values['MDOROB'],
-                '~LOCYLROB~': values['LOCYLROB'],
-                '~LOMEROB~': values['LOMEROB'],
-                '~LOAUXROB~': values['LOAUXROB'],
-                '~LOTOTALROB~': values['LOTOTALROB'],
+                '~HFOROB~': hfo_rob,
+                '~MDOROB~': mdo_rob,
+                '~LOCYLROB~': int(float(values['LOCYLROB'])),
+                '~LOMEROB~': int(float(values['LOMEROB'])),
+                '~LOAUXROB~': int(float(values['LOAUXROB'])),
+                '~LOTOTALROB~': int(float(values['LOTOTALROB'])),
                 '~FWROB~': values['FWROB'],
                 '~FWPROD~': values['FWPROD'],
                 '~FWCONS~': values['FWCONS'],
-                '~MEHFOCONS~': values['MEHFOCONS'],
-                '~MEMDOCONS~': values['MEMDOCONS'],
-                '~AUXHFOCONS~': values['AUXHFOCONS'],
-                '~AUXMDOCONS~': values['AUXMDOCONS'],
-                '~BOILERHFOCONS~': values['BOILERHFOCONS'],
-                '~BOILERMDOCONS~': values['BOILERMDOCONS'],
-                '~TOTALHFOCONS~': values['TOTALHFOCONS'],
-                '~TOTALMDOCONS~': values['TOTALMDOCONS'],
-                '~LOCYLCONS~': values['LOCYLCONS'],
-                '~LOMECONS~': values['LOMECONS'],
-                '~LOAUXCONS~': values['LOAUXCONS'],
-                '~TOTALLOCONS~': values['TOTALLOCONS'],
-                '~RPM~': values['RPM'],
-                '~MEDIST~': values['MEDIST'],
-                '~MESPD~': values['MESPD'],
-                '~SLIP~': values['SLIP'],
-                '~MEKW~': values['MEKW'],
-                '~MEKWH~': values['MEKWH'],
-                '~MELOAD~': values['MELOAD'],
-                '~MEGOV~': values['MEGOV'],
+                '~MEHFOCONS~': me_hfo_cons,
+                '~MEMDOCONS~': me_mdo_cons,
+                '~AUXHFOCONS~': aux_hfo_cons,
+                '~AUXMDOCONS~': aux_mdo_cons,
+                '~BOILERHFOCONS~': boiler_hfo_cons,
+                '~BOILERMDOCONS~': boiler_mdo_cons,
+                '~TOTALHFOCONS~': total_hfo_cons,
+                '~TOTALMDOCONS~': total_mdo_cons,
+                '~LOCYLCONS~': lo_cyl_cons,
+                '~LOMECONS~': lo_me_cons,
+                '~LOAUXCONS~': lo_aux_cons,
+                '~TOTALLOCONS~': lo_total_cons,
+                '~RPM~': rpm,
+                '~MEDIST~': me_dist,
+                '~MESPD~': me_spd,
+                '~SLIP~': slip,
+                '~MEKW~': me_kw,
+                '~MEKWH~': me_kwh,
+                '~MELOAD~': me_load,
+                '~MEGOV~': me_gov,
                 '~AUXTIME~': values['AUXTIME'],
                 '~AUXKW~': values['AUXKW'],
                 '~AUXKWH~': values['AUXKWH'],
@@ -375,40 +434,53 @@ def gui_window():
                 '~BILGEWATERTK~': values['BILGEWATERTK'],
                 '~SLUDGETOTAL~': values['SLUDGETOTAL']
                 }
-
-            if int(user_dict['~WINDFORCEKTS~']) < 1:
-                user_dict['~WINDFORCEB~'] = 0
-            elif 1 <= int(user_dict['~WINDFORCEKTS~']) <= 3:
-                user_dict['~WINDFORCEB~'] = 1
-            elif 4 <= int(user_dict['~WINDFORCEKTS~']) <= 6:
-                user_dict['~WINDFORCEB~'] = 2
-            elif 7 <= int(user_dict['~WINDFORCEKTS~']) <= 10:
-                user_dict['~WINDFORCEB~'] = 3
-            elif 11 <= int(user_dict['~WINDFORCEKTS~']) <= 16:
-                user_dict['~WINDFORCEB~'] = 4
-            elif 17 <= int(user_dict['~WINDFORCEKTS~']) <= 21:
-                user_dict['~WINDFORCEB~'] = 5
-            elif 22 <= int(user_dict['~WINDFORCEKTS~']) <= 27:
-                user_dict['~WINDFORCEB~'] = 6
-            elif 28 <= int(user_dict['~WINDFORCEKTS~']) <= 33:
-                user_dict['~WINDFORCEB~'] = 7
-            elif 34 <= int(user_dict['~WINDFORCEKTS~']) <= 40:
-                user_dict['~WINDFORCEB~'] = 8
-            elif 41 <= int(user_dict['~WINDFORCEKTS~']) <= 47:
-                user_dict['~WINDFORCEB~'] = 9
-            elif 48 <= int(user_dict['~WINDFORCEKTS~']) <= 55:
-                user_dict['~WINDFORCEB~'] = 10
-            elif 56 <= int(user_dict['~WINDFORCEKTS~']) <= 63:
-                user_dict['~WINDFORCEB~'] = 11
-            elif int(user_dict['~WINDFORCEKTS~']) <= 64:
-                user_dict['~WINDFORCEB~'] = 12
-            else:
-                user_dict['~WINDFORCEB~'] = 0
-            # print(user_dict)
+            update = sg.PopupYesNo('Data ready for reports/database update. Do you want to update database?',
+                          title='Update database?')
             check_and_update_database(user_dict)
+            sg.PopupOK(to_next_excel_entry(update))
 
+        if event == 'Create reports':
+            report_creation(user_dict)
     window.close()
 
+
+def percentage(entry):
+    if entry != '' and entry is not None:
+        num_entry = float(entry)
+        percent = num_entry * 100 if num_entry in range(-1, 1) else num_entry
+        return round(percent)
+    else:
+        return 0
+
+
+def check_float_value_present(value):
+    if value != 0 and value != '' and value is not None:
+        return round(float(value), 2)
+    else:
+        return 0
+
+
+def check_int_value_present(value):
+    if value != 0 and value != '' and value is not None:
+        return round(float(value))
+    else:
+        return 0
+
+
+def hour_notation_to_seconds(hour_string):
+    hour_minutes_list = hour_string.split(':')
+    return timedelta(
+        hours=float(hour_minutes_list[0]) + (float(hour_minutes_list[1]) / 60)).total_seconds()
+
+#
+# def to_hours_minutes(td):
+#     return td.days * 24 + td.seconds//3600, (td.seconds // 60) % 60
+
+
+#
+#
+# def to_seconds(hours, minutes):
+#     return hours * 3600 + minutes * 60
 
 er_excel = excel_data_source(data['FIRST_DATA'])
 last_event = last_event_data()

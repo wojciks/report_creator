@@ -116,8 +116,7 @@ def last_event_data():
         c = conn.cursor()
         c.execute(
             'SELECT '
-            'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER, '
-            'REMARKS '
+            'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER '
             'FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
         data = c.fetchone()
         conn.close()

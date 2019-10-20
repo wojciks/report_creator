@@ -1,9 +1,6 @@
 import os
 import os.path
 import datetime
-from excel_process import excel_data_source
-from user_input import nav_data
-import history_process
 from excel_process import data
 import json
 
@@ -17,32 +14,14 @@ def txt_file_creation(to_whom, message):
         myfileresult.write(message)
 
 
-def template_text_file_read(file_path):
+def template_text_file_read(file_path, event_dict):
     with open(file_path, 'r') as file_buffer:
         filedata = file_buffer.read()
-    for key in DICTIONARY:
-        filedata = filedata.replace(key, str(DICTIONARY[key]))
+    for key in event_dict:
+        filedata = filedata.replace(key, str(event_dict[key]))
     return filedata
 
 
-def merge_two_dicts(dict1, dict2):
-    z = dict1.copy()
-    z.update(dict2)
-    return z
-
-
-d = nav_data()
-
-DICTIONARY = merge_two_dicts(excel_data_source(data['FIRST_DATA']), d)
-
-conn = history_process.check_and_update_database(d)  #in the end DICTIONARY will go here as parameter
-# print(history_process.voyage_distance_time_avg_speed(conn, DICTIONARY['~VOY~']))
-
-for filename in os.listdir(data['TEMPLATE_DIRECTORY']):
-    txt_file_creation(f'{filename}'[:-4], template_text_file_read(f'{data["TEMPLATE_DIRECTORY"]}{filename}'))
-
-reports_ok = input("Move on to the next line in excel? y/n: ")
-if reports_ok == 'y':
-    data['FIRST_DATA'] += 1
-    with open('appconf.json', 'w') as outfile:
-        json.dump(data, outfile)
+def report_creation(event_dict):
+    for filename in os.listdir(data['TEMPLATE_DIRECTORY']):
+        txt_file_creation(f'{filename}'[:-4], template_text_file_read(f'{data["TEMPLATE_DIRECTORY"]}{filename}', event_dict))
