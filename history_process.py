@@ -86,7 +86,7 @@ def check_and_update_database(data_dictionary):
             BILGEWATERTK        REAL,
             SLUDGETOTAL         REAL, 
             
-            IFCARGO             INTEGER,  
+            IFCARGO             VARCHAR,  
             COMMENCECARGOLOCAL  INTEGER,
             COMMENCECARGOUTC    INTEGER,
             COMPLETEDCARGOLOCAL INTEGER,

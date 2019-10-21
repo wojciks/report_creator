@@ -205,25 +205,26 @@ def gui_window():
                [sg.Text('Sludge total:', size=(35, 1)), sg.InputText(er_excel['~SLUDGETOTAL~'], size=(20, 1), key='SLUDGETOTAL')]
                ]
 
-    cargo_info = [[sg.Text('Cargo ops in progress:', size=(35, 1)), sg.Drop(values=('No', 'Yes'), size=(20, 1))],
-                  [sg.Text('Cargo ops commenced (LT):', size=(35, 1)), sg.InputText('comm_cargo_local', size=(20, 1))],
-                  [sg.Text('Cargo ops completed (LT):', size=(35, 1)), sg.InputText('compl_cargo_local', size=(20, 1))],
-                  [sg.Text('Cargo ROB:', size=(35, 1)), sg.InputText('cargo_rob', size=(20, 1))],
+    cargo_info = [[sg.Text('Cargo ops in progress:', size=(35, 1)), sg.Drop(key='if_cargo', values=('No', 'Yes'), size=(20, 1))],
+                  [sg.Text('Cargo ops commenced (LT):', size=(35, 1)), sg.InputText(key='comm_cargo_local', size=(20, 1))],
+                  [sg.Text('Cargo ops completed (LT):', size=(35, 1)), sg.InputText(key='compl_cargo_local', size=(20, 1))],
+                  [sg.Text('Cargo ROB:', size=(35, 1)), sg.InputText(key='cargo_rob', size=(20, 1))],
                   [sg.Text('Cargo loaded/discharged from last event:', size=(35, 1)),
-                   sg.InputText('cargo_daily', size=(20, 1))],
-                  [sg.Text('Cargo to go:', size=(35, 1)), sg.InputText('cargo_to_go', size=(20, 1))],
-                  [sg.Text('Ballast water ROB:', size=(35, 1)), sg.InputText('ballast_rob', size=(20, 1))],
+                   sg.InputText(key='cargo_daily', size=(20, 1))],
+                  [sg.Text('Cargo to go:', size=(35, 1)), sg.InputText(key='cargo_to_go', size=(20, 1))],
+                  [sg.Text('Ballast water ROB:', size=(35, 1)), sg.InputText(key='ballast_rob', size=(20, 1))],
                   [sg.Text('Ballast water change from last event:', size=(35, 1)),
-                   sg.InputText('ballast_daily', size=(20, 1))],
+                   sg.InputText(key='ballast_daily', size=(20, 1))],
                   [sg.Text('Number of shore cranes:', size=(35, 1)),
-                   sg.InputText('shore_cranes_no', size=(20, 1))],
+                   sg.InputText(key='shore_cranes_no', size=(20, 1))],
                   [sg.Text('Number of ship cranes:', size=(35, 1)),
-                   sg.InputText('ship_cranes_no', size=(20, 1))],
+                   sg.InputText(key='ship_cranes_no', size=(20, 1))],
                   [sg.Text('Estimated time completion (LT):', size=(35, 1)),
-                   sg.InputText('etc_local', size=(20, 1))],
+                   sg.InputText(key='etc_local', size=(20, 1))],
                   [sg.Text('Estimated time departure (LT):', size=(35, 1)),
-                   sg.InputText('etd_local', size=(20, 1))]]
+                   sg.InputText(key='etd_local', size=(20, 1))]]
 
+    sg.ChangeLookAndFeel('SystemDefault')
     # Create the Window
     layout = [
         [sg.TabGroup([[sg.Tab('Nav info', voy_info),
@@ -271,17 +272,9 @@ def gui_window():
 
             voy_avg_spd = round(voy_dist / (voy_time_seconds / 3600), 2)
 
-            n = time_from_last_seconds
-            hour = n // 3600
-            n %= 3600
-            minutes = n // 60
-            time_from_last_display = f'{int(hour)}:{str(int(minutes)).zfill(2)}'
+            time_from_last_display = seconds_to_hour_notation(time_from_last_seconds)
 
-            n1 = voy_time_seconds % (24 * 3600)
-            hour1 = n1 // 3600
-            n1 %= 3600
-            minutes1 = n1 // 60
-            voy_time_display = f'{int(hour1)}:{str(int(minutes1)).zfill(2)}'
+            voy_time_display = seconds_to_hour_notation(voy_time_seconds)
 
             current = round((avg_gps_spd - avg_log_spd), 2)
 
@@ -339,12 +332,16 @@ def gui_window():
             me_spd = check_float_value_present(values['MESPD'])
             me_kw = check_float_value_present(values['MEKW'])
             me_kwh = check_float_value_present(values['MEKWH'])
+            aux_kw = check_float_value_present(values['AUXKW'])
+            aux_kwh = check_float_value_present(values['AUXKWH'])
 
             slip = percentage(values['SLIP'])
 
             me_load = percentage(values['MELOAD'])
 
             me_gov = percentage(values['MEGOV'])
+
+
 
             window.Element('time_from_last').Update(time_from_last_display)
             window.Element('avg_gps_spd').Update(avg_gps_spd)
@@ -425,14 +422,30 @@ def gui_window():
                 '~MELOAD~': me_load,
                 '~MEGOV~': me_gov,
                 '~AUXTIME~': values['AUXTIME'],
-                '~AUXKW~': values['AUXKW'],
-                '~AUXKWH~': values['AUXKWH'],
+                '~AUXKW~': aux_kw,
+                '~AUXKWH~': aux_kwh,
                 '~SLUDGETK~': values['SLUDGETK'],
                 '~OILYBILGETK~': values['OILYBILGETK'],
                 '~INCINERATORSETTLINGTK~': values['INCINERATORSETTLINGTK'],
                 '~INCINERATORSERVICETK~': values['INCINERATORSERVICETK'],
                 '~BILGEWATERTK~': values['BILGEWATERTK'],
-                '~SLUDGETOTAL~': values['SLUDGETOTAL']
+                '~SLUDGETOTAL~': values['SLUDGETOTAL'],
+                '~IFCARGO~': values['if_cargo'],
+                '~COMMENCECARGOLOCAL~': values['comm_cargo_local'],
+
+                '~COMPLETEDCARGOLOCAL~': values['compl_cargo_local'],
+
+                '~CARGOROB~': values['cargo_rob'],
+                '~CARGODAILY~': values['cargo_daily'],
+                '~CARGOTOGO~': values['cargo_to_go'],
+                '~BALLASTROB~': values['ballast_rob'],
+                '~BALLASTDAILY~': values['ballast_daily'],
+                '~SHORECRANESNO~': values['shore_cranes_no'],
+                '~SHIPCRANESNO~': values['ship_cranes_no'],
+                '~ETCLOCAL~': values['etc_local'],
+
+                '~ETDLOCAL~': values['etd_local']
+
                 }
             update = sg.PopupYesNo('Data ready for reports/database update. Do you want to update database?',
                           title='Update database?')
@@ -472,6 +485,13 @@ def hour_notation_to_seconds(hour_string):
     return timedelta(
         hours=float(hour_minutes_list[0]) + (float(hour_minutes_list[1]) / 60)).total_seconds()
 
+
+def seconds_to_hour_notation(seconds):
+    hour = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    return f'{int(hour)}:{str(int(minutes)).zfill(2)}'
+
 #
 # def to_hours_minutes(td):
 #     return td.days * 24 + td.seconds//3600, (td.seconds // 60) % 60
@@ -482,7 +502,7 @@ def hour_notation_to_seconds(hour_string):
 # def to_seconds(hours, minutes):
 #     return hours * 3600 + minutes * 60
 
-er_excel = excel_data_source(data['FIRST_DATA'])
+er_excel = excel_data_source(data['FIRST_DATA'] - 1)
 last_event = last_event_data()
 gui_window()
 
