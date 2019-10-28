@@ -2,7 +2,6 @@ import os
 import os.path
 import datetime
 from excel_process import data
-import json
 
 
 def txt_file_creation(to_whom, message):

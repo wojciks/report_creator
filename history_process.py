@@ -87,10 +87,10 @@ def check_and_update_database(data_dictionary):
             SLUDGETOTAL         REAL, 
             
             IFCARGO             VARCHAR,  
-            COMMENCECARGOLOCAL  INTEGER,
-            COMMENCECARGOUTC    INTEGER,
-            COMPLETEDCARGOLOCAL INTEGER,
-            COMPLETEDCARGOUTC   INTEGER,
+            COMMENCECARGOLOCAL  VARCHAR,
+            COMMENCECARGOUTC    VARCHAR,
+            COMPLETEDCARGOLOCAL VARCHAR,
+            COMPLETEDCARGOUTC   VARCHAR,
             CARGOROB            INTEGER,
             CARGODAILY          INTEGER,
             CARGOTOGO           INTEGER,
@@ -99,9 +99,7 @@ def check_and_update_database(data_dictionary):
             SHORECRANESNO       INTEGER,
             SHIPCRANESNO        INTEGER,
             ETCLOCAL            VARCHAR,
-            ETCUTC              VARCHAR,
-            ETDLOCAL            VARCHAR,
-            ETDUTC              VARCHAR)''')
+            ETDLOCAL            VARCHAR)''')
     c = conn.cursor()
     key_string = str(list(data_dictionary.keys())).replace('~', '').replace('[', '').replace(']', '').replace("'", "")
     value_string = str(list(data_dictionary.values())).replace('[', '').replace(']', '')
@@ -116,7 +114,8 @@ def last_event_data():
         c = conn.cursor()
         c.execute(
             'SELECT '
-            'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER '
+            'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER, '
+            'CARGOROB, COMMENCECARGOUTC, COMPLETEDCARGOUTC, ETCLOCAL, ETDLOCAL, BALLASTROB, LOCATION '
             'FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
         data = c.fetchone()
         conn.close()
