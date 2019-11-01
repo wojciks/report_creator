@@ -30,6 +30,8 @@ def check_and_update_database(data_dictionary):
             LOGFROMLAST     REAL,
             LOGSPDLAST      REAL,
             CURRENTSPD      REAL,
+            ANCHORDROPPED   REAL,
+            ANCHORAWEIGH    REAL,
             
             NEXTPORT        VARCHAR(50),
             ETATIMELOCAL    VARCHAR,   
@@ -115,7 +117,7 @@ def last_event_data():
         c.execute(
             'SELECT '
             'VOY, EVENT, TZ, TIMEUTC, REMAININGDIST, VOYTIME, VOYDIST, VOYLOGDIST, NEXTPORT, ETATIMEUTC, ETATZ, MASTER, '
-            'CARGOROB, COMMENCECARGOUTC, COMPLETEDCARGOUTC, ETCLOCAL, ETDLOCAL, BALLASTROB, LOCATION '
+            'CARGOROB, COMMENCECARGOUTC, COMPLETEDCARGOUTC, ETCLOCAL, ETDLOCAL, BALLASTROB, LOCATION, BILGES '
             'FROM VOYAGE_EVENT ORDER BY ID DESC limit 1')
         data = c.fetchone()
         conn.close()
