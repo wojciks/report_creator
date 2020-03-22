@@ -71,6 +71,8 @@ Those lines are pretty self-explanatory:
 `"TEMPLATE_DIRECTORY": "./reps_example/",` location of reports templates' files  
 `"REPORT_OUTPUT_DIRECTORY": "./reps_output",` location, where the output files (filled out reports) will be created.
 
+**All directories have to be created prior running app.**
+
 Next rows in `appconf.json` file are to specify  where the app should look for particular data. Those are the numbers of rows/columns. If you put a number `0`, the app will not look for the the data.
 
 
