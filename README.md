@@ -119,7 +119,7 @@ Following abbreviations are created to be as intuitive as possible, but just in 
 
 This is already set for the presented excel file.
 
-**It is a great idea to backup this file, as after first report creation the formatting of the file will be lost!**
+**It is a great idea to backup this file, as after saving new event to database, the formatting of the file will be lost!**
 
 Now it is time to prepare the text files for templates. These should be copied as per path specified in `appconf.json`, and edited appropriately. The data required to be put in the file will replace the tags defining that data. Data is stored in huge dictionary and - apart from above abbreviations, that should be put between `~`, consists of following entries:
 
