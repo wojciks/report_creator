@@ -15,7 +15,8 @@ def gui_window(last_event):
     possible_events = ('Noon Sea', 'Noon River', 'Noon Port', 'Arrival', 'Departure', 'BOSP', 'EOSP', 'Drop Anchor',
                        'Anchor Aweigh', 'Bunkering')
     if last_event is None:
-        voyage_no = location = time_zone = next_port = dest_tz = master = cargo_rob = ballast_rob = ''
+        voyage_no = location = time_zone = next_port = dest_tz = master = cargo_rob = ballast_rob = bilges = ''
+        latitude = longitude = {'degrees': '', 'minutes': '', 'hemisphere': ''}
         last_event = [''] * 19
     else:
         voyage_no = last_event[0]
@@ -27,6 +28,8 @@ def gui_window(last_event):
         ballast_rob = last_event[17]
         location = last_event[18]
         bilges = last_event[19]
+        latitude = geoposition_split(last_event[20])
+        longitude = geoposition_split(last_event[21])
 
     last_eta_lt = check_datetime_data_present(last_event[9], dest_tz)
     c_ops_comm_lt = check_datetime_data_present(last_event[13], time_zone)
@@ -48,12 +51,14 @@ def gui_window(last_event):
                      sg.InputText(time_zone, size=(20, 1), key='tz')],
 
                     [sg.Text('Latitude:', size=(35, 1)),
-                     sg.InputText(size=(5, 1), key='lat_deg'), sg.InputText(size=(5, 1), key='lat_min'),
-                     sg.Drop(values=('', 'N', 'S'), size=(2, 1), key='lat_hemisphere')],
+                     sg.InputText(latitude['degrees'], size=(5, 1), key='lat_deg'),
+                     sg.InputText(latitude['minutes'], size=(5, 1), key='lat_min'),
+                     sg.Drop(default_value=latitude['hemisphere'], values=('', 'N', 'S'), size=(2, 1), key='lat_hemisphere')],
 
                     [sg.Text('Longitude:', size=(35, 1)),
-                     sg.InputText(size=(5, 1), key='long_deg'), sg.InputText(size=(5, 1), key='long_min'),
-                     sg.Drop(values=('', 'E', 'W'), size=(2, 1), key='long_hemisphere')]
+                     sg.InputText(longitude['degrees'], size=(5, 1), key='long_deg'),
+                     sg.InputText(longitude['minutes'], size=(5, 1), key='long_min'),
+                     sg.Drop(default_value=longitude['hemisphere'], values=('', 'E', 'W'), size=(2, 1), key='long_hemisphere')]
                     ]
 
     voy_info = [[sg.Text('Pressure:', size=(35, 1)),
@@ -96,7 +101,7 @@ def gui_window(last_event):
                  sg.InputText(dest_tz, size=(20, 1), key='dest_tz')],
 
                 [sg.Text('Bilges:', size=(35, 1)),
-                 sg.InputText(size=(20, 1), key='bilges')],
+                 sg.InputText(bilges, size=(20, 1), key='bilges')],
 
                 [sg.Text('Master:', size=(35, 1)),
                  sg.InputText(master, size=(20, 1), key='master')],
@@ -569,6 +574,11 @@ def time_read(key, time_list=None):
             sg.InputText(time_list[3], size=(3, 1), key=f'{key}_hour'),
             sg.Text('mm:', size=(4, 1)),
             sg.InputText(time_list[4], size=(3, 1), key=f'{key}_minute')]
+
+
+def geoposition_split(geoposition):
+    split_position = str(geoposition).split('-')
+    return {'degrees': split_position[0], 'minutes': split_position[1][:-1], 'hemisphere': split_position[1][-1]}
 
 
 er_excel = excel_data_source(data['FIRST_DATA'] - 1)
