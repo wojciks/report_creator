@@ -89,3 +89,4 @@ ve-final/
 __pycache__/
 .idea/
 *.db
+appconf.json
