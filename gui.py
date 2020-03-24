@@ -104,7 +104,7 @@ def gui_window(last_event):
                 [sg.Text('Remarks:', size=(35, 1))],
                 [sg.Multiline(size=(57, 5), key='remarks')],
 
-                [sg.Button('Calculate')],
+                [sg.Text('Calculated values for navigation & weather:', size=(35, 1))],
 
                 # Voyage calculations to be made:
 
@@ -239,18 +239,20 @@ def gui_window(last_event):
         time_read('etd', etd)
     ]
 
-    noon_rep = [[sg.Text('Here will go noon report values which will sum values from last 24hrs', size=(57, 5))]]
+    noon_rep = [[sg.Text('Here will go customisation of the reports data', size=(57, 5))],
+                [sg.Button('Create reports')]]
 
     column = [sg.TabGroup([[sg.Tab('Nav info', voy_info),
                             sg.Tab('Engine info', er_info),
                             sg.Tab('Cargo Info', cargo_info),
-                            sg.Tab('Noon report', noon_rep)]])],
+                            sg.Tab('Customise report', noon_rep)]])],
 
     sg.ChangeLookAndFeel('SystemDefault')
     # Create the Window
     layout = [[sg.Frame('Mandatory Data', general_info)],
-              [sg.Button('Submit'),
-               sg.Button('Create reports'),
+              [sg.Button('Calculate'),
+               sg.Button('Data Ready!'),
+               sg.Button('Submit Event'),
                sg.Button('Quit')],
               [sg.Column(column, scrollable=True, vertical_scroll_only=True)]]
 
@@ -393,6 +395,8 @@ def gui_window(last_event):
             window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H:%M'))
             window.Element('wind_b').Update(wind_b)
             window.Element('speed_req').Update(round(speed_req, 2))
+
+        if event == 'Data Ready!':
             user_dict = {
                 '~VOY~': values['voy'],
                 '~EVENT~': values['event'],
@@ -489,7 +493,7 @@ def gui_window(last_event):
                 values['etd_year'] != '' else '',
             }
 
-        if event == 'Submit':
+        if event == 'Submit Event':
             if user_dict is not None:
                 update = sg.PopupYesNo('Data ready for reports/database update. Do you want to update database?',
                                        title='Update database?')
@@ -499,10 +503,12 @@ def gui_window(last_event):
                 sg.PopupError('No calculations made! Press "Calculate" button under Nav Info tab first!', title='Data incomplete!')
 
         if event == 'Create reports':
-            report_creation(user_dict)
-        else:
-            sg.PopupError('No calculations made! Press "Calculate" button under Nav Info tab first!',
+            if user_dict is None:
+                sg.PopupError('No calculations made! Press "Calculate" button under Nav Info tab first!',
                           title='Data incomplete!')
+            else:
+                report_creation(user_dict)
+
     window.close()
 
 
