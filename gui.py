@@ -265,7 +265,7 @@ def gui_window(last_event):
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
-        if event in (None, 'Quit'):  # if user closes window or clicks quit
+        if event in (None, 'Quit'):
             break
         if event == 'Calculate':
             time_local = datetime(int(values['local_time_year']), int(values['local_time_month']),
@@ -535,7 +535,7 @@ def check_float_value_present(value):
 
 def check_int_value_present(value):
     if value != 0 and value != '' and value is not None:
-        return round(float(value))
+        return int(round(float(value)))
     else:
         return 0
 
