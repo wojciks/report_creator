@@ -53,12 +53,14 @@ def gui_window(last_event):
                     [sg.Text('Latitude:', size=(35, 1)),
                      sg.InputText(latitude['degrees'], size=(5, 1), key='lat_deg'),
                      sg.InputText(latitude['minutes'], size=(5, 1), key='lat_min'),
-                     sg.Drop(default_value=latitude['hemisphere'], values=('', 'N', 'S'), size=(2, 1), key='lat_hemisphere')],
+                     sg.Drop(default_value=latitude['hemisphere'], values=('', 'N', 'S'), size=(2, 1),
+                             key='lat_hemisphere')],
 
                     [sg.Text('Longitude:', size=(35, 1)),
                      sg.InputText(longitude['degrees'], size=(5, 1), key='long_deg'),
                      sg.InputText(longitude['minutes'], size=(5, 1), key='long_min'),
-                     sg.Drop(default_value=longitude['hemisphere'], values=('', 'E', 'W'), size=(2, 1), key='long_hemisphere')]
+                     sg.Drop(default_value=longitude['hemisphere'], values=('', 'E', 'W'), size=(2, 1),
+                             key='long_hemisphere')]
                     ]
 
     voy_info = [[sg.Text('Pressure:', size=(35, 1)),
@@ -268,13 +270,18 @@ def gui_window(last_event):
         if event in (None, 'Quit'):
             break
         if event == 'Calculate':
-            time_local = datetime(int(values['local_time_year']), int(values['local_time_month']),
-                                  int(values['local_time_day']),
-                                  int(values['local_time_hour']), int(values['local_time_minute']))
+            time_local = form_to_datetime(values['local_time_year'],
+                                          values['local_time_month'],
+                                          values['local_time_day'],
+                                          values['local_time_hour'],
+                                          values['local_time_minute'])
             time_utc = time_local - timedelta(hours=float(values['tz']))
-            eta_lt = datetime(int(values['eta_lt_year']), int(values['eta_lt_month']), int(values['eta_lt_day']),
-                              int(values['eta_lt_hour']), int(values['eta_lt_minute']))
-            eta_utc = eta_lt - timedelta(hours=float(values['dest_tz']))
+            eta_lt = form_to_datetime(values['eta_lt_year'],
+                                      values['eta_lt_month'],
+                                      values['eta_lt_day'],
+                                      values['eta_lt_hour'],
+                                      values['eta_lt_minute'])
+            eta_utc = eta_lt - timedelta(hours=float(values['dest_tz'])) if eta_lt != '' else ''
             if last_event == [''] * 19:
                 time_from_last_seconds = hour_notation_to_seconds(values['time_from_last'])
                 voy_time_seconds = time_from_last_seconds
@@ -340,9 +347,12 @@ def gui_window(last_event):
                 wind_b = 0
 
             time_rem_hrs = rem_dist / avg_gps_spd if avg_gps_spd != 0 else 0
-            real_eta = time_utc + timedelta(hours=(time_rem_hrs + float(values['dest_tz'])))
-            time_to_eta = eta_utc - time_utc
-            speed_req = rem_dist / (time_to_eta.total_seconds() / 3600)
+            if time_rem_hrs != 0:
+                real_eta = time_utc + timedelta(hours=(time_rem_hrs + float(values['dest_tz'])))
+                time_to_eta = eta_utc - time_utc
+                speed_req = rem_dist / (time_to_eta.total_seconds() / 3600)
+                window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H:%M'))
+                window.Element('speed_req').Update(round(speed_req, 2))
 
             hfo_rob = check_float_value_present(values['HFOROB'])
             mdo_rob = check_float_value_present(values['MDOROB'])
@@ -372,21 +382,19 @@ def gui_window(last_event):
 
             me_gov = percentage(values['MEGOV'])
 
-            if values['c_ops_comm_year'] != '':
-                c_ops_comm_lt = datetime(check_int_value_present(values['c_ops_comm_year']),
-                                         check_int_value_present(values['c_ops_comm_month']),
-                                         check_int_value_present(values['c_ops_comm_day']),
-                                         check_int_value_present(values['c_ops_comm_hour']),
-                                         check_int_value_present(values['c_ops_comm_minute']))
-                c_ops_comm_utc = c_ops_comm_lt + timedelta(hours=float(values['dest_tz']))
+            c_ops_comm_lt = form_to_datetime(values['c_ops_comm_year'],
+                                     values['c_ops_comm_month'],
+                                     values['c_ops_comm_day'],
+                                     values['c_ops_comm_hour'],
+                                     values['c_ops_comm_minute'])
+            c_ops_comm_utc = c_ops_comm_lt + timedelta(hours=float(values['tz'])) if c_ops_comm_lt != '' else None
 
-            if values['c_ops_compl_year'] != '':
-                c_ops_compl_lt = datetime(check_int_value_present(values["c_ops_compl_year"]),
-                                          check_int_value_present(values['c_ops_compl_month']),
-                                          check_int_value_present(values['c_ops_compl_day']),
-                                          check_int_value_present(values['c_ops_compl_hour']),
-                                          check_int_value_present(values['c_ops_compl_minute']))
-                c_ops_compl_utc = c_ops_compl_lt + timedelta(hours=float(values['dest_tz']))
+            c_ops_compl_lt = form_to_datetime(values["c_ops_compl_year"],
+                                      values['c_ops_compl_month'],
+                                      values['c_ops_compl_day'],
+                                      values['c_ops_compl_hour'],
+                                      values['c_ops_compl_minute'])
+            c_ops_compl_utc = c_ops_compl_lt + timedelta(hours=float(values['tz'])) if c_ops_compl_lt != '' else None
 
             window.Element('time_from_last').Update(time_from_last_display)
             window.Element('avg_gps_spd').Update(avg_gps_spd)
@@ -397,9 +405,7 @@ def gui_window(last_event):
             window.Element('voy_avg_spd').Update(voy_avg_spd)
             window.Element('voy_log_dist').Update(voy_log_dist)
             window.Element('rem_dist').Update(rem_dist)
-            window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H:%M'))
             window.Element('wind_b').Update(wind_b)
-            window.Element('speed_req').Update(round(speed_req, 2))
 
         if event == 'Data Ready!':
             user_dict = {
@@ -424,9 +430,9 @@ def gui_window(last_event):
                 '~ANCHORAWEIGH~': 'anchor aweigh',
 
                 '~NEXTPORT~': values['next_port'],
-                '~ETATIMELOCAL~': eta_lt.strftime('%Y-%m-%d %H:%M'),
+                '~ETATIMELOCAL~': if_date_present(eta_lt),
                 '~ETATZ~': values['dest_tz'],
-                '~ETATIMEUTC~': eta_utc.strftime('%Y-%m-%d %H:%M'),
+                '~ETATIMEUTC~': if_date_present(eta_utc),
                 '~WINDDIR~': values['wind_dir'],
                 '~WINDFORCEKTS~': wind_kts,
                 '~WINDFORCEB~': wind_b,
@@ -481,10 +487,8 @@ def gui_window(last_event):
                 '~BILGEWATERTK~': values['BILGEWATERTK'],
                 '~SLUDGETOTAL~': values['SLUDGETOTAL'],
                 '~IFCARGO~': values['if_cargo'],
-                '~COMMENCECARGOUTC~': c_ops_comm_utc.strftime('%Y-%m-%d %H:%M') if values[
-                                                                                       'c_ops_comm_year'] != '' else '',
-                '~COMPLETEDCARGOUTC~': c_ops_compl_utc.strftime('%Y-%m-%d %H:%M') if values[
-                                                                                         'c_ops_compl_year'] != '' else '',
+                '~COMMENCECARGOUTC~': if_date_present(c_ops_comm_utc),
+                '~COMPLETEDCARGOUTC~': if_date_present(c_ops_compl_utc),
                 '~CARGOROB~': values['cargo_rob'],
                 '~CARGODAILY~': values['cargo_daily'],
                 '~CARGOTOGO~': values['cargo_to_go'],
@@ -505,12 +509,13 @@ def gui_window(last_event):
                 check_and_update_database(user_dict)
                 sg.PopupOK(to_next_excel_entry(update))
             else:
-                sg.PopupError('No calculations made! Press "Calculate" button under Nav Info tab first!', title='Data incomplete!')
+                sg.PopupError('No calculations made! Press "Calculate" button under Nav Info tab first!',
+                              title='Data incomplete!')
 
         if event == 'Create reports':
             if user_dict is None:
                 sg.PopupError('No calculations made! Press "Calculate" button under Nav Info tab first!',
-                          title='Data incomplete!')
+                              title='Data incomplete!')
             else:
                 report_creation(user_dict)
 
@@ -574,6 +579,24 @@ def time_read(key, time_list=None):
             sg.InputText(time_list[3], size=(3, 1), key=f'{key}_hour'),
             sg.Text('mm:', size=(4, 1)),
             sg.InputText(time_list[4], size=(3, 1), key=f'{key}_minute')]
+
+
+def form_to_datetime(year, month, day, hour, minute):
+    if year and month and day and hour and minute != '':
+        return datetime(check_int_value_present(year),
+                        check_int_value_present(month),
+                        check_int_value_present(day),
+                        check_int_value_present(hour),
+                        check_int_value_present(minute))
+    else:
+        return ''
+
+
+def if_date_present(value):
+    if type(value) != datetime:
+        return ''
+    else:
+        return value.strftime('%Y-%m-%d %H:%M')
 
 
 def geoposition_split(geoposition):
