@@ -6,6 +6,7 @@ from dateutil import parser
 from excel_process import excel_data_source, data, to_next_excel_entry
 from history_process import last_event_data, check_and_update_database
 from text_file_process import report_creation
+import gui_functions
 
 
 def gui_window(last_event):
@@ -22,20 +23,24 @@ def gui_window(last_event):
         voyage_no = last_event[0]
         time_zone = round(float(last_event[2]), 1)
         next_port = last_event[8]
-        dest_tz = round(float(last_event[10]), 1)
+        if type(last_event[10]) != str:
+            dest_tz = round(float(last_event[10]), 1)
+            last_eta_lt = gui_functions.check_datetime_data_present(last_event[9], dest_tz)
+        else:
+            last_eta_lt = None
+            dest_tz = None
         master = last_event[11]
         cargo_rob = last_event[12]
         ballast_rob = last_event[17]
         location = last_event[18]
         bilges = last_event[19]
-        latitude = geoposition_split(last_event[20])
-        longitude = geoposition_split(last_event[21])
+        latitude = gui_functions.geoposition_split(last_event[20])
+        longitude = gui_functions.geoposition_split(last_event[21])
 
-    last_eta_lt = check_datetime_data_present(last_event[9], dest_tz)
-    c_ops_comm_lt = check_datetime_data_present(last_event[13], time_zone)
-    c_ops_compl_lt = check_datetime_data_present(last_event[14], time_zone)
-    etc = check_datetime_data_present(last_event[15], 0)
-    etd = check_datetime_data_present(last_event[16], 0)
+    c_ops_comm_lt = gui_functions.check_datetime_data_present(last_event[13], time_zone)
+    c_ops_compl_lt = gui_functions.check_datetime_data_present(last_event[14], time_zone)
+    etc = gui_functions.check_datetime_data_present(last_event[15], 0)
+    etd = gui_functions.check_datetime_data_present(last_event[16], 0)
 
     general_info = [[sg.Text('Voyage:', size=(35, 1)), sg.InputText(voyage_no, size=(20, 1), key='voy')],  # 0
                     [sg.Text('Event:', size=(35, 1)),
@@ -45,7 +50,7 @@ def gui_window(last_event):
                      sg.InputText(location, size=(20, 1), key='location')],
 
                     [sg.Text('Local Date/Time:', size=(35, 1))],
-                    time_read('local_time', today_list),
+                    gui_functions.time_read('local_time', today_list),
 
                     [sg.Text('Time Zone: (HH,H - if W):', size=(35, 1)),
                      sg.InputText(time_zone, size=(20, 1), key='tz')],
@@ -97,7 +102,7 @@ def gui_window(last_event):
                  sg.InputText(next_port, size=(20, 1), key='next_port')],
 
                 [sg.Text('ETA:', size=(35, 1))],
-                time_read('eta_lt', last_eta_lt),
+                gui_functions.time_read('eta_lt', last_eta_lt),
 
                 [sg.Text("Destinantion's Time Zone: (HH,H - if W):", size=(35, 1)),
                  sg.InputText(dest_tz, size=(20, 1), key='dest_tz')],
@@ -196,11 +201,11 @@ def gui_window(last_event):
                [sg.Text('ME governor setting:', size=(35, 1)),
                 sg.InputText(er_excel['~MEGOV~'], size=(20, 1), key='MEGOV')],
                [sg.Text('Aux engines total time:', size=(35, 1)),
-                sg.InputText(check_float_value_present(er_excel['~AUXTIME~']), size=(20, 1), key='AUXTIME')],
+                sg.InputText(gui_functions.check_float_value_present(er_excel['~AUXTIME~']), size=(20, 1), key='AUXTIME')],
                [sg.Text('Aux engines average kW:', size=(35, 1)),
                 sg.InputText(er_excel['~AUXKW~'], size=(20, 1), key='AUXKW')],
                [sg.Text('Aux engines total kWh:', size=(35, 1)),
-                sg.InputText(check_float_value_present(er_excel['~AUXKWH~']), size=(20, 1), key='AUXKWH')],
+                sg.InputText(gui_functions.check_float_value_present(er_excel['~AUXKWH~']), size=(20, 1), key='AUXKWH')],
                [sg.Text('Fresh water ROB:', size=(35, 1)),
                 sg.InputText(er_excel['~FWROB~'], size=(20, 1), key='FWROB')],
                [sg.Text('Fresh water produced:', size=(35, 1)),
@@ -224,10 +229,10 @@ def gui_window(last_event):
     cargo_info = [
         [sg.Text('Cargo ops in progress:', size=(35, 1)), sg.Drop(key='if_cargo', values=('No', 'Yes'), size=(20, 1))],
         [sg.Text('Cargo ops commenced (LT):', size=(35, 1))],
-        time_read('c_ops_comm', c_ops_comm_lt),
+        gui_functions.time_read('c_ops_comm', c_ops_comm_lt),
 
         [sg.Text('Cargo ops completed (LT):', size=(35, 1))],
-        time_read('c_ops_compl', c_ops_compl_lt),
+        gui_functions.time_read('c_ops_compl', c_ops_compl_lt),
 
         [sg.Text('Cargo ROB:', size=(35, 1)), sg.InputText(cargo_rob, key='cargo_rob', size=(20, 1))],
         [sg.Text('Cargo loaded/discharged from last event:', size=(35, 1)),
@@ -241,9 +246,9 @@ def gui_window(last_event):
         [sg.Text('Number of ship cranes:', size=(35, 1)),
          sg.InputText(key='ship_cranes_no', size=(20, 1))],
         [sg.Text('Estimated time completion (LT):', size=(35, 1))],
-        time_read('etc', etc),
+        gui_functions.time_read('etc', etc),
         [sg.Text('Estimated time departure (LT):', size=(35, 1))],
-        time_read('etd', etd)
+        gui_functions.time_read('etd', etd)
     ]
 
     noon_rep = [[sg.Text('Here will go customisation of the reports data', size=(57, 5))],
@@ -270,20 +275,20 @@ def gui_window(last_event):
         if event in (None, 'Quit'):
             break
         if event == 'Calculate':
-            time_local = form_to_datetime(values['local_time_year'],
+            time_local = gui_functions.form_to_datetime(values['local_time_year'],
                                           values['local_time_month'],
                                           values['local_time_day'],
                                           values['local_time_hour'],
                                           values['local_time_minute'])
             time_utc = time_local - timedelta(hours=float(values['tz']))
-            eta_lt = form_to_datetime(values['eta_lt_year'],
+            eta_lt = gui_functions.form_to_datetime(values['eta_lt_year'],
                                       values['eta_lt_month'],
                                       values['eta_lt_day'],
                                       values['eta_lt_hour'],
                                       values['eta_lt_minute'])
             eta_utc = eta_lt - timedelta(hours=float(values['dest_tz'])) if eta_lt != '' else ''
             if last_event == [''] * 19:
-                time_from_last_seconds = hour_notation_to_seconds(values['time_from_last'])
+                time_from_last_seconds = gui_functions.hour_notation_to_seconds(values['time_from_last'])
                 voy_time_seconds = time_from_last_seconds
                 voy_dist = float(values['gps_dist']) if values['gps_dist'] != '' else 0
                 voy_log_dist = float(values['log']) if values['log'] != '' else 0
@@ -292,31 +297,31 @@ def gui_window(last_event):
                 avg_log_spd = voy_log_dist / (time_from_last_seconds / 3600)
             else:
                 time_from_last_seconds = (time_utc - parser.parse(last_event[3])).total_seconds()
-                last_voy_time = hour_notation_to_seconds(last_event[5])
+                last_voy_time = gui_functions.hour_notation_to_seconds(last_event[5])
                 voy_time_seconds = time_from_last_seconds + last_voy_time
 
-                voy_dist = round(check_float_value_present(values['gps_dist']) + float(last_event[6]), 1) if values[
+                voy_dist = round(gui_functions.check_float_value_present(values['gps_dist']) + float(last_event[6]), 1) if values[
                                                                                                                  'gps_dist'] != '' else round(
                     float(last_event[6]), 1)
 
-                voy_log_dist = check_float_value_present(values['log']) + float(last_event[7]) if values[
+                voy_log_dist = gui_functions.check_float_value_present(values['log']) + float(last_event[7]) if values[
                                                                                                       'log'] != '' else float(
                     last_event[7])
 
-                rem_dist = round(float(last_event[4]) - check_float_value_present(values['gps_dist']))
+                rem_dist = round(float(last_event[4]) - gui_functions.check_float_value_present(values['gps_dist']))
 
-                avg_gps_spd = round(check_float_value_present(values['gps_dist']) / (time_from_last_seconds / 3600), 1)
-                avg_log_spd = round(check_float_value_present(values['log']) / (time_from_last_seconds / 3600), 1)
+                avg_gps_spd = round(gui_functions.check_float_value_present(values['gps_dist']) / (time_from_last_seconds / 3600), 1)
+                avg_log_spd = round(gui_functions.check_float_value_present(values['log']) / (time_from_last_seconds / 3600), 1)
 
             voy_avg_spd = round(voy_dist / (voy_time_seconds / 3600), 1)
 
-            time_from_last_display = seconds_to_hour_notation(time_from_last_seconds)
+            time_from_last_display = gui_functions.seconds_to_hour_notation(time_from_last_seconds)
 
-            voy_time_display = seconds_to_hour_notation(voy_time_seconds)
+            voy_time_display = gui_functions.seconds_to_hour_notation(voy_time_seconds)
 
             current = round((avg_gps_spd - avg_log_spd), 2)
 
-            wind_kts = check_int_value_present(values['wind_force'])
+            wind_kts = gui_functions.check_int_value_present(values['wind_force'])
             if wind_kts < 1:
                 wind_b = 0
             elif 1 <= wind_kts <= 3:
@@ -354,42 +359,42 @@ def gui_window(last_event):
                 window.Element('real_eta').Update(real_eta.strftime('%Y-%m-%d %H:%M'))
                 window.Element('speed_req').Update(round(speed_req, 2))
 
-            hfo_rob = check_float_value_present(values['HFOROB'])
-            mdo_rob = check_float_value_present(values['MDOROB'])
-            me_hfo_cons = check_float_value_present(values['MEHFOCONS'])
-            me_mdo_cons = check_float_value_present(values['MEMDOCONS'])
-            aux_hfo_cons = check_float_value_present(values['AUXHFOCONS'])
-            aux_mdo_cons = check_float_value_present(values['AUXMDOCONS'])
-            boiler_hfo_cons = check_float_value_present(values['BOILERHFOCONS'])
-            boiler_mdo_cons = check_float_value_present(values['BOILERMDOCONS'])
-            total_hfo_cons = check_float_value_present(values['TOTALHFOCONS'])
-            total_mdo_cons = check_float_value_present(values['TOTALMDOCONS'])
-            lo_cyl_cons = check_int_value_present(values['LOCYLCONS'])
-            lo_me_cons = check_int_value_present(values['LOMECONS'])
-            lo_aux_cons = check_int_value_present(values['LOAUXCONS'])
-            lo_total_cons = check_int_value_present(values['TOTALLOCONS'])
-            rpm = check_float_value_present(values['RPM'])
-            me_dist = check_float_value_present(values['MEDIST'])
-            me_spd = check_float_value_present(values['MESPD'])
-            me_kw = check_float_value_present(values['MEKW'])
-            me_kwh = check_float_value_present(values['MEKWH'])
-            aux_kw = check_float_value_present(values['AUXKW'])
-            aux_kwh = check_float_value_present(values['AUXKWH'])
+            hfo_rob = gui_functions.check_float_value_present(values['HFOROB'])
+            mdo_rob = gui_functions.check_float_value_present(values['MDOROB'])
+            me_hfo_cons = gui_functions.check_float_value_present(values['MEHFOCONS'])
+            me_mdo_cons = gui_functions.check_float_value_present(values['MEMDOCONS'])
+            aux_hfo_cons = gui_functions.check_float_value_present(values['AUXHFOCONS'])
+            aux_mdo_cons = gui_functions.check_float_value_present(values['AUXMDOCONS'])
+            boiler_hfo_cons = gui_functions.check_float_value_present(values['BOILERHFOCONS'])
+            boiler_mdo_cons = gui_functions.check_float_value_present(values['BOILERMDOCONS'])
+            total_hfo_cons = gui_functions.check_float_value_present(values['TOTALHFOCONS'])
+            total_mdo_cons = gui_functions.check_float_value_present(values['TOTALMDOCONS'])
+            lo_cyl_cons = gui_functions.check_int_value_present(values['LOCYLCONS'])
+            lo_me_cons = gui_functions.check_int_value_present(values['LOMECONS'])
+            lo_aux_cons = gui_functions.check_int_value_present(values['LOAUXCONS'])
+            lo_total_cons = gui_functions.check_int_value_present(values['TOTALLOCONS'])
+            rpm = gui_functions.check_float_value_present(values['RPM'])
+            me_dist = gui_functions.check_float_value_present(values['MEDIST'])
+            me_spd = gui_functions.check_float_value_present(values['MESPD'])
+            me_kw = gui_functions.check_float_value_present(values['MEKW'])
+            me_kwh = gui_functions.check_float_value_present(values['MEKWH'])
+            aux_kw = gui_functions.check_float_value_present(values['AUXKW'])
+            aux_kwh = gui_functions.check_float_value_present(values['AUXKWH'])
 
-            slip = percentage(values['SLIP'])
+            slip = gui_functions.percentage(values['SLIP'])
 
-            me_load = percentage(values['MELOAD'])
+            me_load = gui_functions.percentage(values['MELOAD'])
 
-            me_gov = percentage(values['MEGOV'])
+            me_gov = gui_functions.percentage(values['MEGOV'])
 
-            c_ops_comm_lt = form_to_datetime(values['c_ops_comm_year'],
+            c_ops_comm_lt = gui_functions.form_to_datetime(values['c_ops_comm_year'],
                                      values['c_ops_comm_month'],
                                      values['c_ops_comm_day'],
                                      values['c_ops_comm_hour'],
                                      values['c_ops_comm_minute'])
             c_ops_comm_utc = c_ops_comm_lt + timedelta(hours=float(values['tz'])) if c_ops_comm_lt != '' else None
 
-            c_ops_compl_lt = form_to_datetime(values["c_ops_compl_year"],
+            c_ops_compl_lt = gui_functions.form_to_datetime(values["c_ops_compl_year"],
                                       values['c_ops_compl_month'],
                                       values['c_ops_compl_day'],
                                       values['c_ops_compl_hour'],
@@ -430,9 +435,9 @@ def gui_window(last_event):
                 '~ANCHORAWEIGH~': 'anchor aweigh',
 
                 '~NEXTPORT~': values['next_port'],
-                '~ETATIMELOCAL~': if_date_present(eta_lt),
+                '~ETATIMELOCAL~': gui_functions.if_date_present(eta_lt),
                 '~ETATZ~': values['dest_tz'],
-                '~ETATIMEUTC~': if_date_present(eta_utc),
+                '~ETATIMEUTC~': gui_functions.if_date_present(eta_utc),
                 '~WINDDIR~': values['wind_dir'],
                 '~WINDFORCEKTS~': wind_kts,
                 '~WINDFORCEB~': wind_b,
@@ -487,8 +492,8 @@ def gui_window(last_event):
                 '~BILGEWATERTK~': values['BILGEWATERTK'],
                 '~SLUDGETOTAL~': values['SLUDGETOTAL'],
                 '~IFCARGO~': values['if_cargo'],
-                '~COMMENCECARGOUTC~': if_date_present(c_ops_comm_utc),
-                '~COMPLETEDCARGOUTC~': if_date_present(c_ops_compl_utc),
+                '~COMMENCECARGOUTC~': gui_functions.if_date_present(c_ops_comm_utc),
+                '~COMPLETEDCARGOUTC~': gui_functions.if_date_present(c_ops_compl_utc),
                 '~CARGOROB~': values['cargo_rob'],
                 '~CARGODAILY~': values['cargo_daily'],
                 '~CARGOTOGO~': values['cargo_to_go'],
@@ -520,88 +525,6 @@ def gui_window(last_event):
                 report_creation(user_dict)
 
     window.close()
-
-
-def percentage(entry):
-    if entry != '' and entry is not None:
-        num_entry = float(entry)
-        percent = num_entry * 100 if num_entry in range(-1, 1) else num_entry
-        return round(percent)
-    else:
-        return 0
-
-
-def check_float_value_present(value):
-    if value != 0 and value != '' and value is not None:
-        return round(float(value), 2)
-    else:
-        return 0
-
-
-def check_int_value_present(value):
-    if value != 0 and value != '' and value is not None:
-        return int(round(float(value)))
-    else:
-        return 0
-
-
-def hour_notation_to_seconds(hour_string):
-    hour_minutes_list = hour_string.split(':')
-    return timedelta(
-        hours=float(hour_minutes_list[0]) + (float(hour_minutes_list[1]) / 60)).total_seconds()
-
-
-def seconds_to_hour_notation(seconds):
-    hour = seconds // 3600
-    seconds %= 3600
-    minutes = seconds // 60
-    return f'{int(hour)}:{str(int(minutes)).zfill(2)}'
-
-
-def check_datetime_data_present(datetime_string, tz=None):
-    if datetime_string != 0 and datetime_string != '' and datetime_string is not None:
-        date_format = parser.parse(datetime_string)
-        tz_timedelta = timedelta(hours=tz)
-        date_format += tz_timedelta
-        return [date_format.year, date_format.month, date_format.day, date_format.hour, date_format.minute]
-    else:
-        return ['', '', '', '', '']
-
-
-def time_read(key, time_list=None):
-    return [sg.Text('YYYY:', size=(6, 1)),
-            sg.InputText(time_list[0], size=(4, 1), key=f'{key}_year'),
-            sg.Text('MM:', size=(3, 1)),
-            sg.InputText(time_list[1], size=(3, 1), key=f'{key}_month'),
-            sg.Text('DD:', size=(3, 1)),
-            sg.InputText(time_list[2], size=(3, 1), key=f'{key}_day'),
-            sg.Text('HH:', size=(3, 1)),
-            sg.InputText(time_list[3], size=(3, 1), key=f'{key}_hour'),
-            sg.Text('mm:', size=(4, 1)),
-            sg.InputText(time_list[4], size=(3, 1), key=f'{key}_minute')]
-
-
-def form_to_datetime(year, month, day, hour, minute):
-    if year and month and day and hour and minute != '':
-        return datetime(check_int_value_present(year),
-                        check_int_value_present(month),
-                        check_int_value_present(day),
-                        check_int_value_present(hour),
-                        check_int_value_present(minute))
-    else:
-        return ''
-
-
-def if_date_present(value):
-    if type(value) != datetime:
-        return ''
-    else:
-        return value.strftime('%Y-%m-%d %H:%M')
-
-
-def geoposition_split(geoposition):
-    split_position = str(geoposition).split('-')
-    return {'degrees': split_position[0], 'minutes': split_position[1][:-1], 'hemisphere': split_position[1][-1]}
 
 
 er_excel = excel_data_source(data['FIRST_DATA'] - 1)
