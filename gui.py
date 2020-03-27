@@ -9,7 +9,7 @@ from text_file_process import report_creation
 import gui_functions
 
 
-def gui_window(last_event):
+def main(last_event):
     user_dict = None
     today = datetime.today()
     today_list = [today.year, today.month, today.day, today.hour, today.minute]
@@ -527,6 +527,7 @@ def gui_window(last_event):
     window.close()
 
 
-er_excel = excel_data_source(data['FIRST_DATA'] - 1)
-last_event = last_event_data()
-gui_window(last_event)
+if __name__ == '__main__':
+    er_excel = excel_data_source(data['FIRST_DATA'] - 1)
+    last_event = last_event_data()
+    main(last_event)
